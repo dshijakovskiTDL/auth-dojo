@@ -1,7 +1,9 @@
+import { NavLink } from 'react-router';
+
 import { useSessionUser } from '../../context/session-user';
 import { useTokenUser } from '../../context/token-user';
+
 import { AuthType, authTypes } from '../../utils/types';
-import { NavLink } from 'react-router';
 
 const NavLinks = () => {
   const { user: tokenUser } = useTokenUser();

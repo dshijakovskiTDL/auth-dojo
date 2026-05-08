@@ -1,19 +1,15 @@
 import { Route, Routes } from 'react-router';
 
 import TokensLayout from './pages/tokens/layout';
-import TokensLogin from './pages/tokens/login';
-import TokensHomepage from './pages/tokens';
-
 import SessionLayout from './pages/session/layout';
-import SessionHomepage from './pages/session';
-import SessionLogin from './pages/session/login';
 
 import OAuthDemo from './pages/oauth';
-
 import Homepage from './pages/home';
 
 import Header from './components/header';
 import Footer from './components/footer';
+import Dashboard from './components/dashboard';
+import LoginForm from './components/login/login-form';
 
 function App() {
   return (
@@ -22,27 +18,27 @@ function App() {
 
       <main className="container mx-auto py-10 grid place-content-center">
         <Routes>
-          <Route path="oauth" element={<OAuthDemo />} />
-
           <Route path="token">
             <Route element={<TokensLayout mode="auth" />}>
-              <Route index element={<TokensHomepage />} />
+              <Route index element={<Dashboard authRoute="token" />} />
             </Route>
 
             <Route element={<TokensLayout mode="no-auth" />}>
-              <Route path="login" element={<TokensLogin />} />
+              <Route path="login" element={<LoginForm authRoute="token" />} />
             </Route>
           </Route>
 
           <Route path="session">
             <Route element={<SessionLayout mode="auth" />}>
-              <Route index element={<SessionHomepage />} />
+              <Route index element={<Dashboard authRoute="session" />} />
             </Route>
 
             <Route element={<SessionLayout mode="no-auth" />}>
-              <Route path="login" element={<SessionLogin />} />
+              <Route path="login" element={<LoginForm authRoute="session" />} />
             </Route>
           </Route>
+
+          <Route path="oauth" element={<OAuthDemo />} />
 
           <Route path="/" element={<Homepage />} />
         </Routes>

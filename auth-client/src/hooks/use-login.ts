@@ -1,10 +1,13 @@
-import { useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { LoginUser } from '../utils/types';
 import { AuthRoute, getApiUrl } from '../utils/api';
 
-type OnSuccess = (userData: LoginUser) => void;
+export const useLogin = (authRoute: AuthRoute) => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-export const useLogin = (authRoute: AuthRoute, onSuccess: OnSuccess) => {
   return useMutation<LoginUser | undefined, Error, { email: string; password: string }>({
     mutationFn: async ({ email, password }) => {
       const body = { email, password };
@@ -27,7 +30,8 @@ export const useLogin = (authRoute: AuthRoute, onSuccess: OnSuccess) => {
     onSettled: (userData) => {
       if (!userData) return;
 
-      onSuccess(userData);
+      queryClient.setQueryData([authRoute, 'me'], userData);
+      navigate(`/${authRoute}`);
     },
   });
 };

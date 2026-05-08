@@ -1,10 +1,11 @@
 import { PropsWithChildren } from 'react';
 
 import { TokenUserContext } from '.';
-import { useMeToken } from './useMe';
+
+import { useMe } from '../../hooks/use-me';
 
 export const TokenUserProvider = ({ children }: PropsWithChildren) => {
-  const value = useMeToken();
+  const value = useMe('token');
 
   return <TokenUserContext.Provider value={value}>{children}</TokenUserContext.Provider>;
 };

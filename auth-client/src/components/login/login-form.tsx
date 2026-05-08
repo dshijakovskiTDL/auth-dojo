@@ -1,17 +1,14 @@
 import { ElementRef, FormEvent, useRef } from 'react';
 
-import DemoTitle from './title';
-
-import { AuthType } from '../utils/types';
-import { useLogin } from '../hooks/use-login';
+import { useLogin } from '../../hooks/use-login';
+import { AuthRoute } from '../../utils/api';
 
 type Props = {
-  authType: AuthType;
-  loginMutation: ReturnType<typeof useLogin>;
+  authRoute: AuthRoute;
 };
 
-const LoginForm = ({ authType, loginMutation }: Props) => {
-  const { mutate, isPending, error } = loginMutation;
+const LoginForm = ({ authRoute }: Props) => {
+  const { mutate, isPending, error } = useLogin(authRoute);
 
   const formRef = useRef<ElementRef<'form'> | null>(null);
 
@@ -29,7 +26,10 @@ const LoginForm = ({ authType, loginMutation }: Props) => {
 
   return (
     <div className="space-y-10 max-w-[60ch]">
-      <DemoTitle authType={authType} />
+      <h2 className="text-2xl text-center">
+        <span className="underline capitalize italic">{authRoute}</span> based
+        Authentication
+      </h2>
 
       <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4 w-fit">
         <div className="control">

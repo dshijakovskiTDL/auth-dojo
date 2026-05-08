@@ -1,7 +1,7 @@
 import { Link, Route, Routes } from 'react-router';
 
-import TokenLogout from './token-logout';
-import SessionLogout from './session-logout';
+import TokenLogout from './logout-buttons/token-logout';
+import SessionLogout from './logout-buttons/session-logout';
 import NavLinks from './nav-links';
 
 const Header = () => {

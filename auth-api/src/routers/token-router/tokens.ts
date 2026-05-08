@@ -1,7 +1,6 @@
 import { Context } from 'hono';
 import { sign, verify } from 'hono/jwt';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { CookieOptions } from 'hono/utils/cookie';
 import { SignatureAlgorithm } from 'hono/utils/jwt/jwa';
 import { randomBytes } from 'node:crypto';
 import { randomUUIDv7 } from 'bun';

@@ -1,38 +1,15 @@
-import { Navigate, Outlet } from 'react-router';
+import AuthLayout, { AuthProtectMode } from '../auth-layout';
+
 import { useTokenUser } from '../../context/token-user';
 
 type Props = {
-  mode: 'auth' | 'no-auth';
+  mode: AuthProtectMode;
 };
 
 const TokensLayout = ({ mode }: Props) => {
-  const { user, isLoading, error } = useTokenUser();
+  const tokenUser = useTokenUser();
 
-  if (isLoading) {
-    return <p>Loading...</p>;
-  }
-
-  if (error) {
-    console.error(error);
-  }
-
-  if (mode === 'auth') {
-    if (user) {
-      return <Outlet />;
-    }
-
-    return <Navigate to="/token/login" />;
-  }
-
-  if (mode === 'no-auth') {
-    if (user) {
-      return <Navigate to="/token" />;
-    }
-
-    return <Outlet />;
-  }
-
-  throw new Error('Invalid layout state!');
+  return <AuthLayout mode={mode} authRoute="token" userCtx={tokenUser} />;
 };
 
 export default TokensLayout;

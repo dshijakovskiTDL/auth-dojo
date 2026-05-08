@@ -1,10 +1,8 @@
 import { createContext, useContext } from 'react';
 
-import { useMeToken } from './useMe';
+import { useMe } from '../../hooks/use-me';
 
-export type TokenUser = { email: string; userId: string };
-
-type TokenUserCtx = ReturnType<typeof useMeToken>;
+type TokenUserCtx = ReturnType<typeof useMe>;
 export const TokenUserContext = createContext<TokenUserCtx | null>(null);
 
 export const useTokenUser = () => {

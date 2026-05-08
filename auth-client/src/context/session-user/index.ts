@@ -1,10 +1,7 @@
 import { createContext, useContext } from 'react';
+import { useMe } from '../../hooks/use-me';
 
-import { useMeSession } from './useMe';
-
-export type SessionUser = { email: string; userId: string };
-
-type SessionContextType = ReturnType<typeof useMeSession>;
+type SessionContextType = ReturnType<typeof useMe>;
 export const SessionContext = createContext<SessionContextType | null>(null);
 
 export const useSessionUser = () => {

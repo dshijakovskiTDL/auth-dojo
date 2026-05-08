@@ -1,39 +1,15 @@
-import { Navigate, Outlet } from 'react-router';
+import AuthLayout, { AuthProtectMode } from '../auth-layout';
 
 import { useSessionUser } from '../../context/session-user';
 
 type Props = {
-  mode: 'auth' | 'no-auth';
+  mode: AuthProtectMode;
 };
 
 const SessionLayout = ({ mode }: Props) => {
-  const { user, isLoading, error } = useSessionUser();
+  const sessionUser = useSessionUser();
 
-  if (isLoading) {
-    return <p>Loading...</p>;
-  }
-
-  if (error) {
-    console.error(error);
-  }
-
-  if (mode === 'auth') {
-    if (user) {
-      return <Outlet />;
-    }
-
-    return <Navigate to="/session/login" />;
-  }
-
-  if (mode === 'no-auth') {
-    if (user) {
-      return <Navigate to="/session" />;
-    }
-
-    return <Outlet />;
-  }
-
-  throw new Error('Invalid layout state!');
+  return <AuthLayout authRoute="session" mode={mode} userCtx={sessionUser} />;
 };
 
 export default SessionLayout;
