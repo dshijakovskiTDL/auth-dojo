@@ -1,12 +1,13 @@
 import { Navigate, Outlet } from 'react-router';
-import { useTokenUser } from '../../context/token-user';
+
+import { useSessionUser } from '../../context/session-user';
 
 type Props = {
   mode: 'auth' | 'no-auth';
 };
 
-const TokensLayout = ({ mode }: Props) => {
-  const { user, isLoading, error } = useTokenUser();
+const SessionLayout = ({ mode }: Props) => {
+  const { user, isLoading, error } = useSessionUser();
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -21,12 +22,12 @@ const TokensLayout = ({ mode }: Props) => {
       return <Outlet />;
     }
 
-    return <Navigate to="/token/login" />;
+    return <Navigate to="/session/login" />;
   }
 
   if (mode === 'no-auth') {
     if (user) {
-      return <Navigate to="/token" />;
+      return <Navigate to="/session" />;
     }
 
     return <Outlet />;
@@ -35,4 +36,4 @@ const TokensLayout = ({ mode }: Props) => {
   throw new Error('Invalid layout state!');
 };
 
-export default TokensLayout;
+export default SessionLayout;

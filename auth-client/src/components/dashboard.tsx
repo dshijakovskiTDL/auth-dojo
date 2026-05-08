@@ -1,4 +1,4 @@
-const TokenDashboard = ({ data }: { data: string }) => {
+const Dashboard = ({ data }: { data: string }) => {
   return (
     <div className="grid gap-4 place-content-center">
       <p>{data}</p>
@@ -6,4 +6,4 @@ const TokenDashboard = ({ data }: { data: string }) => {
   );
 };
 
-export default TokenDashboard;
+export default Dashboard;

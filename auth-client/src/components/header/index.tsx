@@ -1,7 +1,8 @@
-import { Link, NavLink, Route, Routes } from 'react-router';
-import { authTypes } from '../../utils/types';
+import { Link, Route, Routes } from 'react-router';
 
 import TokenLogout from './token-logout';
+import SessionLogout from './session-logout';
+import NavLinks from './nav-links';
 
 const Header = () => {
   return (
@@ -14,27 +15,11 @@ const Header = () => {
         <Routes>
           <Route path="token/*" element={<TokenLogout />}></Route>
 
-          <Route path="session/*" element={<p>Session Navbar</p>}></Route>
+          <Route path="session/*" element={<SessionLogout />}></Route>
 
           <Route path="oauth/*" element={<p>OAuth Navbar</p>}></Route>
 
-          <Route
-            path="*"
-            element={
-              <ul className="flex gap-5 items-center">
-                {authTypes.map((aType) => (
-                  <li key={aType}>
-                    <NavLink
-                      to={aType.toLowerCase()}
-                      className="ring ring-slate-500 rounded-sm px-4 py-1.5 block hover:scale-105 focus-visible:scale-105 transition-[scale] aria-[current='page']:bg-slate-900 aria-[current='page']:text-slate-200"
-                    >
-                      {aType}
-                    </NavLink>
-                  </li>
-                ))}
-              </ul>
-            }
-          ></Route>
+          <Route path="*" element={<NavLinks />}></Route>
         </Routes>
       </nav>
     </header>

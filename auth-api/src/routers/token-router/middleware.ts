@@ -1,9 +1,10 @@
 import { createMiddleware } from 'hono/factory';
 
-import { store, TokenUser } from './store';
+import { store } from './store';
 import { tokens } from './tokens';
+import { LoginUser } from '../shared/credentials';
 
-type ValidateTokensMiddleware = { Variables: { user: TokenUser } };
+type ValidateTokensMiddleware = { Variables: { user: LoginUser } };
 
 export const validateTokens = createMiddleware<ValidateTokensMiddleware>(
   async (c, next) => {
@@ -23,8 +24,8 @@ export const validateTokens = createMiddleware<ValidateTokensMiddleware>(
 
         return next();
       } catch (e) {
-        console.log('Access token verification error');
-        console.log(e);
+        console.error('Access token verification error');
+        console.error(e);
       }
     }
 

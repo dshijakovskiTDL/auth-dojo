@@ -6,18 +6,18 @@ import LoginForm from '../../components/login-form';
 import { LoginUser } from '../../utils/types';
 import { useLogin } from '../../hooks/use-login';
 
-const TokensLogin = () => {
+const SessionLogin = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const onSuccess = (userData: LoginUser) => {
-    queryClient.setQueryData(['token', 'me'], userData);
-    navigate('/token');
+    queryClient.setQueryData(['session', 'me'], userData);
+    navigate('/session');
   };
 
-  const loginMutation = useLogin('token', onSuccess);
+  const loginMutation = useLogin('session', onSuccess);
 
-  return <LoginForm authType="Token" loginMutation={loginMutation} />;
+  return <LoginForm authType="Session" loginMutation={loginMutation} />;
 };
 
-export default TokensLogin;
+export default SessionLogin;

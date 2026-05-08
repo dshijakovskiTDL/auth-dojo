@@ -1,12 +1,11 @@
 import { safeParse } from 'valibot';
 import { createMiddleware } from 'hono/factory';
 
-import { loginSchema, secretLogin } from './credentials';
-import { TokenUser } from '../tokens-router/store';
+import { loginSchema, LoginUser, secretLogin } from './credentials';
 
 // Shared middleware for validating mock credentials for Token and Session routers
 export const validateCredentials = createMiddleware<{
-  Variables: { user: TokenUser };
+  Variables: { user: LoginUser };
 }>(async (c, next) => {
   const result = safeParse(loginSchema, await c.req.json());
   if (!result.success) {

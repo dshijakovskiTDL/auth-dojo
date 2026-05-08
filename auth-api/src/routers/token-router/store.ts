@@ -1,33 +1,34 @@
-import { durationSeconds, hashToken } from '../shared/utils';
+import { durationSeconds, hashValue } from '../shared/utils';
 import { redis, RedisKeyPrefix } from '../shared/redis';
+import { LoginUser } from '../shared/credentials';
 
-export type TokenUser = { email: string; userId: string };
-export type AccessToken = { user: TokenUser; exp: number; jti: string };
+export type AccessToken = { user: LoginUser; exp: number; jti: string };
 
 const STORE_PREFIX: RedisKeyPrefix = 'token:';
 const BLACKLIST_PREFIX: RedisKeyPrefix = `${STORE_PREFIX}blacklist:`;
 
-const getUser = async (refreshToken: string) => {
-  const hashedToken = hashToken(refreshToken);
-  const key = `${STORE_PREFIX}${hashedToken}`;
+const tokenKey = (token: string) => {
+  const hashedToken = hashValue(token);
+  return `${STORE_PREFIX}${hashedToken}`;
+};
 
+const getUser = async (refreshToken: string) => {
+  const key = tokenKey(refreshToken);
   const user = await redis.get(key);
   if (!user) return null;
 
-  return JSON.parse(user) as TokenUser;
+  return JSON.parse(user) as LoginUser;
 };
 
-const addUser = async (refreshToken: string, user: TokenUser) => {
-  const hashedToken = hashToken(refreshToken);
-  const key = `${STORE_PREFIX}${hashedToken}`;
+const addUser = async (refreshToken: string, user: LoginUser) => {
+  const key = tokenKey(refreshToken);
   const ttl = durationSeconds(1, 'days');
 
   await redis.set(key, JSON.stringify(user), 'EX', ttl);
 };
 
 const removeUser = async (refreshToken: string) => {
-  const hashedToken = hashToken(refreshToken);
-  const key = `${STORE_PREFIX}${hashedToken}`;
+  const key = tokenKey(refreshToken);
 
   await redis.del(key);
 };

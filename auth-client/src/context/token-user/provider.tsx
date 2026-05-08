@@ -1,13 +1,10 @@
-import { useMeToken } from './useMe';
-import { TokenUserContext } from '.';
 import { PropsWithChildren } from 'react';
 
-export const TokenUserProvider = ({ children }: PropsWithChildren) => {
-  const result = useMeToken();
+import { TokenUserContext } from '.';
+import { useMeToken } from './useMe';
 
-  return (
-    <TokenUserContext.Provider value={result}>
-      {children}
-    </TokenUserContext.Provider>
-  );
+export const TokenUserProvider = ({ children }: PropsWithChildren) => {
+  const value = useMeToken();
+
+  return <TokenUserContext.Provider value={value}>{children}</TokenUserContext.Provider>;
 };

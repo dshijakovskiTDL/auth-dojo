@@ -9,6 +9,6 @@ export const tokenExpiry = (value: number, unit: DurationUnit) => {
   return Math.floor(Date.now() / 1000) + durationSeconds(value, unit);
 };
 
-export const hashToken = (token: string) => {
-  return Bun.hash(token);
+export const hashValue = (value: string) => {
+  return Bun.hash(value);
 };

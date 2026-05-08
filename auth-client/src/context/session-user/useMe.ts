@@ -1,14 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-
-import { TokenUser } from '.';
+import { LoginUser } from '../../utils/types';
 import { getApiUrl } from '../../utils/api';
 
-export const useMeToken = () => {
+export const useMeSession = () => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['token', 'me'],
-
+    queryKey: ['session', 'me'],
     queryFn: async () => {
-      const response = await fetch(getApiUrl('token', 'me'), {
+      const response = await fetch(getApiUrl('session', 'me'), {
         credentials: 'include',
       });
       if (!response.ok) {
@@ -18,7 +16,7 @@ export const useMeToken = () => {
         return null;
       }
 
-      const user = (await response.json()) as TokenUser;
+      const user = (await response.json()) as LoginUser;
       return user;
     },
   });

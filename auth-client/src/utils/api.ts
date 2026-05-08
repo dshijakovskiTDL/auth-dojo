@@ -7,14 +7,18 @@ const ROUTES = {
     logout: '/token/logout',
     dashboard: '/token/dashboard',
   },
+
+  session: {
+    me: '/session/me',
+    login: '/session/login',
+    logout: '/session/logout',
+    dashboard: '/session/dashboard',
+  },
 };
 
-type AuthRoute = keyof typeof ROUTES;
-type Endpoint<T extends AuthRoute> = keyof (typeof ROUTES)[T];
+export type AuthRoute = keyof typeof ROUTES;
+export type Endpoint<T extends AuthRoute> = keyof (typeof ROUTES)[T];
 
-export const getApiUrl = <T extends AuthRoute>(
-  authRoute: T,
-  endpoint: Endpoint<T>,
-) => {
+export const getApiUrl = <T extends AuthRoute>(authRoute: T, endpoint: Endpoint<T>) => {
   return API_BASE_URL + ROUTES[authRoute][endpoint];
 };

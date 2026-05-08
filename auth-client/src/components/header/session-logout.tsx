@@ -5,17 +5,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import LogoutButton from '../logout-button';
 
 import { getApiUrl } from '../../utils/api';
-import { useTokenUser } from '../../context/token-user';
+import { useSessionUser } from '../../context/session-user';
 
-const TokenLogout = () => {
-  const { user, isLoading } = useTokenUser();
+const SessionLogout = () => {
+  const { user, isLoading } = useSessionUser();
 
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const { mutate } = useMutation({
     mutationFn: async () => {
-      const response = await fetch(getApiUrl('token', 'logout'), {
+      const response = await fetch(getApiUrl('session', 'logout'), {
         method: 'POST',
         credentials: 'include',
       });
@@ -25,8 +25,8 @@ const TokenLogout = () => {
       }
     },
     onSuccess: () => {
-      queryClient.setQueryData(['token', 'me'], null);
-      navigate('/token/login');
+      queryClient.setQueryData(['session', 'me'], null);
+      navigate('/session/login');
     },
   });
 
@@ -45,4 +45,4 @@ const TokenLogout = () => {
   return <LogoutButton logout={logout} />;
 };
 
-export default TokenLogout;
+export default SessionLogout;

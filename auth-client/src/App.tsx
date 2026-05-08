@@ -1,15 +1,16 @@
 import { Route, Routes } from 'react-router';
 
-import SessionAuthDemo from './pages/session';
-
 import TokensLayout from './pages/tokens/layout';
 import TokensLogin from './pages/tokens/login';
-import TokensDemoDashboard from './pages/tokens';
+import TokensHomepage from './pages/tokens';
+
+import SessionLayout from './pages/session/layout';
+import SessionHomepage from './pages/session';
+import SessionLogin from './pages/session/login';
 
 import OAuthDemo from './pages/oauth';
 
 import Homepage from './pages/home';
-import HomepageLayout from './pages/home/layout';
 
 import Header from './components/header';
 import Footer from './components/footer';
@@ -25,7 +26,7 @@ function App() {
 
           <Route path="token">
             <Route element={<TokensLayout mode="auth" />}>
-              <Route index element={<TokensDemoDashboard />} />
+              <Route index element={<TokensHomepage />} />
             </Route>
 
             <Route element={<TokensLayout mode="no-auth" />}>
@@ -33,11 +34,17 @@ function App() {
             </Route>
           </Route>
 
-          <Route path="session" element={<SessionAuthDemo />} />
+          <Route path="session">
+            <Route element={<SessionLayout mode="auth" />}>
+              <Route index element={<SessionHomepage />} />
+            </Route>
 
-          <Route path="/" element={<HomepageLayout />}>
-            <Route index element={<Homepage />} />
+            <Route element={<SessionLayout mode="no-auth" />}>
+              <Route path="login" element={<SessionLogin />} />
+            </Route>
           </Route>
+
+          <Route path="/" element={<Homepage />} />
         </Routes>
       </main>
 

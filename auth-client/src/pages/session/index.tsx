@@ -4,11 +4,11 @@ import Dashboard from '../../components/dashboard';
 
 import { getApiUrl } from '../../utils/api';
 
-const TokensHomepage = () => {
+const SessionHomepage = () => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['token', 'dashboard'],
+    queryKey: ['session', 'dashboard'],
     queryFn: async () => {
-      const response = await fetch(getApiUrl('token', 'dashboard'), {
+      const response = await fetch(getApiUrl('session', 'dashboard'), {
         credentials: 'include',
       });
 
@@ -33,4 +33,4 @@ const TokensHomepage = () => {
   );
 };
 
-export default TokensHomepage;
+export default SessionHomepage;

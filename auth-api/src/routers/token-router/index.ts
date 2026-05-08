@@ -6,7 +6,7 @@ import { validateTokens } from './middleware';
 import { tokens } from './tokens';
 import { store } from './store';
 
-const router = new Hono().basePath('/token');
+const router = new Hono();
 
 router.post('/login', validateCredentials, async (c) => {
   const user = c.get('user');

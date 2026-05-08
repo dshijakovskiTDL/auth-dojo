@@ -7,7 +7,8 @@ import { randomBytes } from 'node:crypto';
 import { randomUUIDv7 } from 'bun';
 
 import { durationSeconds, tokenExpiry } from '../shared/utils';
-import { AccessToken, TokenUser } from './store';
+import { AccessToken } from './store';
+import { cookieOptions, LoginUser } from '../shared/credentials';
 
 const jwtSecret = Bun.env.JWT_SECRET || randomBytes(32).toString('hex');
 const jwtAlgo: SignatureAlgorithm = 'HS256';
@@ -27,7 +28,7 @@ const verifyAccessToken = async (accessToken: string) => {
   return (await verify(accessToken, jwtSecret, jwtAlgo)) as AccessToken;
 };
 
-const generateTokens = async (user: TokenUser) => {
+const generateTokens = async (user: LoginUser) => {
   const payload: AccessToken = {
     user,
     exp: tokenExpiry(15, 'minutes'),
@@ -40,13 +41,6 @@ const generateTokens = async (user: TokenUser) => {
   return { accessToken, refreshToken };
 };
 
-const cookieOptions: CookieOptions = {
-  httpOnly: true,
-  sameSite: 'lax', // TODO: Learn how/when to use the different values
-  secure: Bun.env.BUN_DEV === 'production',
-  path: '/',
-};
-
 const setCookies = (
   c: Context,
   tokens: { accessToken: string; refreshToken: string },
@@ -55,11 +49,11 @@ const setCookies = (
 
   setCookie(c, ACCESS_TOKEN, accessToken, {
     ...cookieOptions,
-    maxAge: durationSeconds(15, 'minutes'), // 15 minutes
+    maxAge: durationSeconds(15, 'minutes'),
   });
   setCookie(c, REFRESH_TOKEN, refreshToken, {
     ...cookieOptions,
-    maxAge: durationSeconds(1, 'days'), // 1 day
+    maxAge: durationSeconds(1, 'days'),
   });
 };
 
