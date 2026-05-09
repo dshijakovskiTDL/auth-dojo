@@ -16,14 +16,13 @@ app.route('/token', tokensRouter);
 
 app.route('/session', sessionRouter);
 
-app.get('/health', (c) => {
-  const tokenStoreStatus = { tokenStore: redis.status };
-
-  if (redis.status !== 'ready') {
-    return c.json({ status: 'error', ...tokenStoreStatus }, 500);
+app.get('/health', async (c) => {
+  try {
+    await redis.send('PING', []);
+    return c.json({ status: 'ok' });
+  } catch {
+    return c.json({ status: 'error' }, 500);
   }
-
-  return c.json({ status: 'ok', ...tokenStoreStatus });
 });
 
 console.info(showRoutes(app, { verbose: true }));

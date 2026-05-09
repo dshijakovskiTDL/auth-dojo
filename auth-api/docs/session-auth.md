@@ -27,7 +27,7 @@ This project demonstrates **classic server-side session auth**: the browser hold
 **Redis usage**
 
 - **Sessions:** key **`session:<hashValue(sessionId)>`**, value **`JSON.stringify(LoginUser)`**, TTL **1 day** (`durationSeconds(1, 'days')`). The raw session id exists only in the cookie; Redis uses a **hashed key** (same helper as the token router: **`hashValue`** wraps **`Bun.hash`**).
-- **`GET /health`:** still reflects the shared Redis client (`tokenStore` naming in JSON is historical; both routers use the same **`redis`** instance).
+- **`GET /health`:** **`PING`s** Redis via the same shared **`RedisClient`** as `/token`; responds with **`{ "status": "ok" }`** or **`{ "status": "error" }`** (HTTP 500).
 
 Redis is **required** for login and any authenticated `/session/*` route.
 

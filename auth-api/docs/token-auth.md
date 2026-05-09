@@ -30,7 +30,7 @@ This project demonstrates **cookie-based token auth**: the browser never stores 
 
 - **Refresh sessions:** key `token:<hashValue(refreshToken)>` (see **`hashValue`** in `shared/utils.ts`; implemented with **`Bun.hash`**), value JSON **`LoginUser`**, TTL **1 day** (`durationSeconds(1, 'days')`). The raw refresh token is only in the cookie; Redis stores a **hashed key** and user payload.
 - **Access blacklist (logout / revoke):** key `token:blacklist:<jti>`, short value, TTL = remaining JWT lifetime (skipped if already expired).
-- **`GET /health`:** checks the shared ioredis client is `ready`.
+- **`GET /health`:** **`PING`s** the shared **`RedisClient`** internally; JSON body is only **`{ "status": "ok" }`** or **`{ "status": "error" }`** (HTTP 500 on failure — no Redis detail in the payload).
 
 Redis is **required** for login, refresh rotation, logout blacklist behavior, and a healthy API process.
 
@@ -146,7 +146,7 @@ These are natural next steps when moving from a learning codebase to production:
 1. **Richer session store** — Keep Redis for speed but add a **relational DB** for device lists, metadata, and admin “logout everywhere”; consider **HMAC-SHA256 (with a server pepper)** instead of **`Bun.hash` via `hashValue`** if you need a documented, portable key scheme.
 2. **Secrets management** — Use a stable, injected **`JWT_SECRET`** (and never rely on an ephemeral random default across process restarts, which would invalidate all tokens unpredictably).
 3. **CSRF strategy** — For cookie-based auth, consider **double-submit cookies**, CSRF tokens for state-changing requests, or tightening **`SameSite`** where flows allow — especially if you add cross-site embedding or non-simple requests from other origins.
-4. **Redis and availability** — **`/health`** already reflects Redis; in production you would plan **fallback** or **degraded** behavior if Redis is down (blacklist might be best-effort vs. total outage).
+4. **Redis and availability** — **`/health`** still **`PING`s** Redis internally; in production you would plan **fallback** or **degraded** behavior if Redis is down (blacklist might be best-effort vs. total outage).
 5. **Rate limiting & lockout** — Protect **`/token/login`** and refresh paths from brute force and token stuffing.
 6. **Algorithm & key hygiene** — HS256 is fine with a strong secret; at larger scale, **asymmetric** keys (RS256/EdDSA) help when many services verify tokens. Rotate keys deliberately.
 7. **Monitoring** — Alert on spike in 401s, Redis errors, or repeated refresh failures (possible token theft or misuse).
