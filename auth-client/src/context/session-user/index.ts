@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+
 import { useMe } from '../../hooks/use-me';
 
 type SessionContextType = ReturnType<typeof useMe>;

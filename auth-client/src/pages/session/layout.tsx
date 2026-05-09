@@ -1,6 +1,5 @@
-import AuthLayout, { AuthProtectMode } from '../auth-layout';
-
 import { useSessionUser } from '../../context/session-user';
+import AuthLayout, { AuthProtectMode } from '../auth-layout';
 
 type Props = {
   mode: AuthProtectMode;

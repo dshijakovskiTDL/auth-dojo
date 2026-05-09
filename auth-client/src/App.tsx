@@ -1,22 +1,20 @@
 import { Route, Routes } from 'react-router';
 
-import TokensLayout from './pages/tokens/layout';
-import SessionLayout from './pages/session/layout';
-
-import OAuthDemo from './pages/oauth';
-import Homepage from './pages/home';
-
-import Header from './components/header';
-import Footer from './components/footer';
 import Dashboard from './components/dashboard';
+import Footer from './components/footer';
+import Header from './components/header';
 import LoginForm from './components/login/login-form';
+import Homepage from './pages/home';
+import OAuthDemo from './pages/oauth';
+import SessionLayout from './pages/session/layout';
+import TokensLayout from './pages/tokens/layout';
 
 function App() {
   return (
     <div className="grid h-dvh grid-rows-[auto_1fr_auto]">
       <Header />
 
-      <main className="container mx-auto py-10 grid place-content-center">
+      <main className="container mx-auto grid place-content-center py-10">
         <Routes>
           <Route path="token">
             <Route element={<TokensLayout mode="auth" />}>

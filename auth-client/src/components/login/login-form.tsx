@@ -25,13 +25,13 @@ const LoginForm = ({ authRoute }: Props) => {
   };
 
   return (
-    <div className="space-y-10 max-w-[60ch]">
-      <h2 className="text-2xl text-center">
-        <span className="underline capitalize italic">{authRoute}</span> based
+    <div className="max-w-[60ch] space-y-10">
+      <h2 className="text-center text-2xl">
+        <span className="capitalize italic underline">{authRoute}</span> based
         Authentication
       </h2>
 
-      <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4 w-fit">
+      <form ref={formRef} onSubmit={handleSubmit} className="grid w-fit gap-4">
         <div className="control">
           <label htmlFor="email">Email</label>
           <input
@@ -58,7 +58,7 @@ const LoginForm = ({ authRoute }: Props) => {
           Log in
         </button>
 
-        {error && <p className="font-medium text-sm text-red-600">{error.message}</p>}
+        {error && <p className="text-sm font-medium text-red-600">{error.message}</p>}
       </form>
     </div>
   );

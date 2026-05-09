@@ -3,8 +3,8 @@ import { Link } from 'react-router';
 const Footer = () => {
   return (
     <footer className="border-t border-t-slate-500/20">
-      <div className="container mx-auto py-5 w-full flex items-center justify-between gap-4">
-        <Link to="/" className="font-semibold  text-lg">
+      <div className="container mx-auto flex w-full items-center justify-between gap-4 py-5">
+        <Link to="/" className="text-lg font-semibold">
           Auth 🥷 Dojo
         </Link>
 

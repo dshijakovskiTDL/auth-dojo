@@ -14,21 +14,21 @@
 
 a,
 button {
-  @apply cursor-pointer active:scale-[0.97] transition-[scale] duration-150;
+  @apply cursor-pointer transition-[scale] duration-150 active:scale-[0.97];
 
   &:disabled {
-    @apply bg-gray-400! text-slate-900! pointer-events-none!;
+    @apply pointer-events-none! bg-gray-400! text-slate-900!;
   }
 }
 
 input {
-  @apply border border-cyan-900 p-2 rounded-md inline-block w-fit min-w-[40ch] text-inherit;
+  @apply inline-block w-fit min-w-[40ch] rounded-md border border-cyan-900 p-2 text-inherit;
 
   &:disabled {
-    @apply bg-gray-200! pointer-events-none border-gray-300! placeholder:text-slate-600!;
+    @apply pointer-events-none border-gray-300! bg-gray-200! placeholder:text-slate-600!;
   }
 }
 
 button[type='submit'] {
-  @apply bg-slate-900 text-slate-200 font-semibold px-4 py-2.5 mt-4 rounded-md;
+  @apply mt-4 rounded-md bg-slate-900 px-4 py-2.5 font-semibold text-slate-200;
 }

@@ -1,6 +1,5 @@
-import AuthLayout, { AuthProtectMode } from '../auth-layout';
-
 import { useTokenUser } from '../../context/token-user';
+import AuthLayout, { AuthProtectMode } from '../auth-layout';
 
 type Props = {
   mode: AuthProtectMode;

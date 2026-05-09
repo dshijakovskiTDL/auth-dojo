@@ -15,7 +15,7 @@ const Dashboard = ({ authRoute }: Props) => {
       {error && <p className="font-semibold text-red-500">{error.message}</p>}
 
       {data && (
-        <div className="grid gap-4 place-content-center">
+        <div className="grid place-content-center gap-4">
           <p>{data}</p>
         </div>
       )}
