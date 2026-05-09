@@ -9,25 +9,26 @@ This project demonstrates **cookie-based token auth**: the browser never stores 
 **What you are proving in code**
 
 - After a successful login, the API returns **two artifacts**: a short-lived **access token** and a longer-lived **refresh token**.
-- Both are placed in **cookies** (`httpOnly`, `SameSite`, and `Secure` in production) so script on your origin cannot read them easily, and the browser attaches them to same-site (or configured cross-origin) requests.
+- Both are placed in **cookies** (`httpOnly`, **`sameSite: 'strict'`**, **`secure: true`** — see `cookieOptions` in `credentials.ts`) so script on your origin cannot read them easily, and the browser attaches them to credentialed requests from the configured **`FRONTEND_URL`** origin.
 - **Access token**: a signed **JWT** (HS256) that encodes the user, an expiry, and a unique id (`jti`). It is used for routine authorized requests until it expires (here, about **15 minutes**).
-- **Refresh token**: a **random** value (not a JWT) sent in a cookie. The server looks it up in **Redis** under a **deterministic hash** of that value (`Bun.hash`). It can mint new access (and refresh) tokens. It lasts **1 day** in both cookie `maxAge` and Redis **`EX`** TTL.
+- **Refresh token**: a **random** value (not a JWT) sent in a cookie. The server looks it up in **Redis** under **`hashValue(refreshToken)`** (`shared/utils.ts`; **`Bun.hash`** under the hood). It can mint new access (and refresh) tokens. It lasts **1 day** in both cookie `maxAge` and Redis **`EX`** TTL.
 
 **How the pieces are split in this repo**
 
 | Concern                                                   | Where it lives                                                                                                                             |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | Login credential check                                    | `auth-api/src/routers/shared/middleware.ts` — `validateCredentials` (**demo** fixed email/password from `secretLogin` in `credentials.ts`) |
-| Demo login user / schema                                  | `auth-api/src/routers/shared/credentials.ts`                                                                                               |
-| Access JWT signing / verification, cookie names & options | `auth-api/src/routers/tokens-router/tokens.ts` — `JWT_SECRET`, HS256, `auth-dojo-access-token`, `auth-dojo-refresh-token`                  |
-| Refresh token → user mapping + access JWT blacklist       | `auth-api/src/routers/tokens-router/store.ts` — **`store`**: Redis keys below, single shared client from `shared/redis.ts`                 |
-| HTTP routes for `/token/*`                                | `auth-api/src/routers/tokens-router/index.ts`                                                                                              |
-| `validateTokens` middleware                               | `auth-api/src/routers/tokens-router/middleware.ts`                                                                                         |
+| Demo login user / cookie defaults                         | `auth-api/src/routers/shared/credentials.ts` — `LoginUser`, `cookieOptions`, `loginSchema`, Valibot `safeParse` on login body               |
+| Access JWT signing / verification, cookie names & options | `auth-api/src/routers/token-router/tokens.ts` — `JWT_SECRET`, HS256, `auth-dojo-access-token`, `auth-dojo-refresh-token`                    |
+| Refresh token → user mapping + access JWT blacklist       | `auth-api/src/routers/token-router/store.ts` — **`store`**: Redis keys below, single shared client from `shared/redis.ts`                  |
+| Token hashing helper                                      | `auth-api/src/routers/shared/utils.ts` — **`hashValue`** (wraps **`Bun.hash`**) for Redis keys                                             |
+| HTTP routes for `/token/*`                                | `auth-api/src/routers/token-router/index.ts` — router exported as `tokensRouter`, mounted at **`/token`** in `index.ts`                   |
+| `validateTokens` middleware                               | `auth-api/src/routers/token-router/middleware.ts`                                                                                          |
 | CORS for credentialed browser calls                       | `auth-api/src/index.ts` — `credentials: true`, origin from `FRONTEND_URL`                                                                  |
 
 **Redis usage**
 
-- **Refresh sessions:** key `token:<Bun.hash(refreshToken)>`, value JSON **`LoginUser`**, TTL **1 day** (`durationSeconds(1, 'days')`). The raw refresh token is only in the cookie; Redis stores a **hashed key** and user payload.
+- **Refresh sessions:** key `token:<hashValue(refreshToken)>` (see **`hashValue`** in `shared/utils.ts`; implemented with **`Bun.hash`**), value JSON **`LoginUser`**, TTL **1 day** (`durationSeconds(1, 'days')`). The raw refresh token is only in the cookie; Redis stores a **hashed key** and user payload.
 - **Access blacklist (logout / revoke):** key `token:blacklist:<jti>`, short value, TTL = remaining JWT lifetime (skipped if already expired).
 - **`GET /health`:** checks the shared ioredis client is `ready`.
 
@@ -59,7 +60,7 @@ sequenceDiagram
   BE->>BE: validateCredentials (demo user)
   BE->>BE: generateTokens — JWT access + random refresh
   BE->>FE: Set-Cookie access + refresh (httpOnly, …)
-  BE->>R: SET token hash → user JSON, EX 1 day
+  BE->>R: SET token:hashValue(refresh) → user JSON, EX 1 day
   BE-->>FE: 200 JSON user
   FE->>FE: React Query caches user (e.g. ['token','me'])
 ```
@@ -67,7 +68,7 @@ sequenceDiagram
 **What happens to tokens**
 
 - **Cookies**: The response **set-cookie** headers store the JWT and refresh value. The SPA does not need to read them.
-- **Redis**: **`store.addUser`** writes **`token:<hash(refresh)>`** with **`JSON.stringify(user)`** and a **1 day** TTL. The refresh token string itself is not stored as the Redis key (only a stable hash).
+- **Redis**: **`store.addUser`** writes **`token:<hashValue(refresh)>`** with **`JSON.stringify(user)`** and a **1 day** TTL. The refresh token string itself is not stored as the Redis key (only a stable hash).
 
 ### 2. Calling a protected route (`GET /token/me` or `/token/dashboard`)
 
@@ -83,7 +84,7 @@ sequenceDiagram
     R-->>BE: miss
     BE-->>FE: 200 user / data
   else Access JWT missing or invalid
-    BE->>R: GET token hash(refresh) → user JSON
+    BE->>R: GET token:hashValue(refresh) → user JSON
     alt Refresh valid
       BE->>BE: New access + refresh; rotate
       BE->>FE: Set-Cookie (new pair)
@@ -111,7 +112,7 @@ sequenceDiagram
   participant R as Redis
 
   FE->>BE: POST /token/logout (cookies)
-  BE->>R: DEL token hash(refresh) if present
+  BE->>R: DEL token:hashValue(refresh) if present
   BE->>R: SET token:blacklist:jti EX remaining JWT TTL (if > 0)
   BE->>FE: Clear access + refresh cookies
   BE-->>FE: 200 { ok: true }
@@ -128,13 +129,13 @@ sequenceDiagram
 | Property                  | What the project does                                                                                                                                                       |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Least exposure to XSS** | Tokens are **HTTP-only** cookies, not readable from `document.cookie` by app JS (malicious script could still perform requests as the user — CSP and input hygiene matter). |
-| **Transport**             | `secure: true` when `BUN_DEV === 'production'` so cookies are not sent over plain HTTP in prod.                                                                             |
-| **CSRF awareness**        | `SameSite=Lax` reduces some cross-site request risks; it is not a complete CSRF story for every API shape.                                                                  |
+| **Transport**             | `secure: true` on cookies (`credentials.ts`) — use HTTPS in environments where browsers enforce secure cookies.                                                             |
+| **CSRF awareness**        | `SameSite=Strict` on cookies reduces cross-site cookie submission; it is not a complete CSRF story for every API shape.                                                      |
 | **Short-lived access**    | JWT expiry (~15 minutes) limits stolen access-token window.                                                                                                                 |
 | **Refresh rotation**      | On each refresh path, the **old** refresh token row is removed and the **new** one is stored — supports **detecting reuse** in a fuller design.                             |
 | **Logout semantics**      | Refresh row deleted; access token **blacklisted** in Redis until expiry.                                                                                                    |
 | **Stateful revocation**   | Redis blacklist makes “logout now” meaningful for the current access JWT.                                                                                                   |
-| **Refresh at rest**       | Redis keys use **`Bun.hash(refreshToken)`** so the cookie value is not stored verbatim as the key (still protect Redis like any secret store).                              |
+| **Refresh at rest**       | Redis keys use **`hashValue(refreshToken)`** (`Bun.hash` under the hood) so the cookie value is not stored verbatim as the key (still protect Redis like any secret store). |
 
 ---
 
@@ -142,7 +143,7 @@ sequenceDiagram
 
 These are natural next steps when moving from a learning codebase to production:
 
-1. **Richer session store** — Keep Redis for speed but add a **relational DB** for device lists, metadata, and admin “logout everywhere”; consider **HMAC-SHA256 (with a server pepper)** instead of `Bun.hash` if you need a documented, portable key scheme.
+1. **Richer session store** — Keep Redis for speed but add a **relational DB** for device lists, metadata, and admin “logout everywhere”; consider **HMAC-SHA256 (with a server pepper)** instead of **`Bun.hash` via `hashValue`** if you need a documented, portable key scheme.
 2. **Secrets management** — Use a stable, injected **`JWT_SECRET`** (and never rely on an ephemeral random default across process restarts, which would invalidate all tokens unpredictably).
 3. **CSRF strategy** — For cookie-based auth, consider **double-submit cookies**, CSRF tokens for state-changing requests, or tightening **`SameSite`** where flows allow — especially if you add cross-site embedding or non-simple requests from other origins.
 4. **Redis and availability** — **`/health`** already reflects Redis; in production you would plan **fallback** or **degraded** behavior if Redis is down (blacklist might be best-effort vs. total outage).
