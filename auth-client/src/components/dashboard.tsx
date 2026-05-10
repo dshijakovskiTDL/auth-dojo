@@ -12,7 +12,7 @@ const Dashboard = ({ authRoute }: Props) => {
     <>
       {isLoading && <p>Loading Dashboard...</p>}
 
-      {error && <p className="font-semibold text-red-500">{error.message}</p>}
+      {error && <p className="font-semibold text-red-500">Error: {error.message}</p>}
 
       {data && (
         <div className="grid place-content-center gap-4 text-center">

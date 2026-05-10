@@ -3,7 +3,8 @@ import { Route, Routes } from 'react-router';
 import Dashboard from './components/dashboard';
 import Footer from './components/footer';
 import Header from './components/header';
-import LoginForm from './components/login/login-form';
+import LoginForm from './components/login-form';
+import SignUpForm from './components/signup-form';
 import Homepage from './pages/home';
 import OAuthLayout from './pages/oauth/layout';
 import OAuthForm from './pages/oauth/login-form';
@@ -24,6 +25,7 @@ function App() {
 
             <Route element={<TokensLayout mode="no-auth" />}>
               <Route path="login" element={<LoginForm authRoute="token" />} />
+              <Route path="signup" element={<SignUpForm authRoute="token" />} />
             </Route>
           </Route>
 
@@ -34,6 +36,7 @@ function App() {
 
             <Route element={<SessionLayout mode="no-auth" />}>
               <Route path="login" element={<LoginForm authRoute="session" />} />
+              <Route path="signup" element={<SignUpForm authRoute="session" />} />
             </Route>
           </Route>
 

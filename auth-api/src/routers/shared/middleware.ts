@@ -24,7 +24,7 @@ const registerAuthModeSchema = v.object({
 
 const validateRegister = vValidator('json', registerSchema, (result, c) => {
   if (!result.success) {
-    return c.json({ error: 'Invalid request' }, 401);
+    return c.json({ error: 'Invalid request' }, 400);
   }
 });
 
@@ -33,7 +33,7 @@ const validateRegisterAuthMode = vValidator(
   registerAuthModeSchema,
   (result, c) => {
     if (!result.success) {
-      return c.json({ error: 'Invalid auth mode' }, 401);
+      return c.json({ error: 'Invalid auth mode' }, 400);
     }
   },
 );

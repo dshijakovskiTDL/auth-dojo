@@ -1,7 +1,8 @@
 import { ElementRef, FormEvent, useRef } from 'react';
+import { Link } from 'react-router';
 
-import { useLogin } from '../../hooks/use-login';
-import { AuthRoute } from '../../utils/api';
+import { useLogin } from '../hooks/use-login';
+import { AuthRoute } from '../utils/api';
 
 type Props = {
   authRoute: AuthRoute;
@@ -53,6 +54,13 @@ const LoginForm = ({ authRoute }: Props) => {
             disabled={isPending}
           />
         </div>
+
+        <p className="text-end">
+          Not a member?{' '}
+          <Link to={`/${authRoute}/signup`} className="underline">
+            Create an account
+          </Link>
+        </p>
 
         <button disabled={isPending} type="submit">
           Log in

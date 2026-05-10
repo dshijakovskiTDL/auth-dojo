@@ -1,16 +1,25 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 
-import { AuthRoute, getApiUrl } from '../utils/api';
+import { API_BASE_URL, AuthRoute } from '../utils/api';
 import { LoginUser } from '../utils/types';
 
-export const useLogin = (authRoute: AuthRoute) => {
+type SignupUser = {
+  email: string;
+  name: string;
+  password: string;
+};
+
+export const useSignup = (authRoute: AuthRoute) => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  return useMutation<LoginUser | undefined, Error, { email: string; password: string }>({
+  return useMutation<LoginUser | undefined, Error, SignupUser>({
     mutationFn: async (body) => {
-      const response = await fetch(getApiUrl(authRoute, 'login'), {
+      const apiUrl = new URL(API_BASE_URL + '/signup');
+      apiUrl.searchParams.set('authMode', authRoute);
+
+      const response = await fetch(apiUrl.toString(), {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
