@@ -1,9 +1,6 @@
 import { Hono } from 'hono';
-import {
-  validateGoogleCallback,
-  validateOAuthMethod,
-  validateOAuthSession,
-} from './middleware';
+
+import { oAuthMiddleware } from './middleware';
 import { googleOAuth } from './oauth/google';
 import { oAuthStore } from './store';
 import { oAuth } from './oauth';
@@ -13,7 +10,7 @@ const frontendUrl = Bun.env.FRONTEND_URL || 'http://localhost:5173';
 
 const router = new Hono();
 
-router.get('/login', validateOAuthMethod, async (c) => {
+router.get('/login', oAuthMiddleware.validateOAuthMethod, async (c) => {
   const { method } = c.req.valid('query');
 
   if (method === 'google') {
@@ -24,7 +21,7 @@ router.get('/login', validateOAuthMethod, async (c) => {
   return c.json({ error: 'Not yet supported' }, 501);
 });
 
-router.get('/google/callback', validateGoogleCallback, async (c) => {
+router.get('/google/callback', oAuthMiddleware.validateGoogleCallback, async (c) => {
   const params = c.req.valid('query');
 
   const userData = await googleOAuth.loginCallback(c, params);
@@ -52,11 +49,11 @@ router.post('/logout', async (c) => {
   return c.json({ ok: true });
 });
 
-router.get('/me', validateOAuthSession, async (c) => {
+router.get('/me', oAuthMiddleware.validateOAuthSession, async (c) => {
   return c.json(c.get('user'));
 });
 
-router.get('/dashboard', validateOAuthSession, async (c) => {
+router.get('/dashboard', oAuthMiddleware.validateOAuthSession, async (c) => {
   const user = c.get('user');
 
   return c.json({ data: 'OAuth Dummy data', user });

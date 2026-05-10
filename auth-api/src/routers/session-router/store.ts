@@ -1,4 +1,3 @@
-import { AuthUser } from '../shared/credentials';
 import { database } from '../shared/db';
 import { redis, RedisKeyPrefix } from '../shared/redis';
 import { durationSeconds, hashValue } from '../shared/utils';
@@ -35,7 +34,7 @@ export const removeSession = async (sessionId: string) => {
   await redis.del(key);
 };
 
-export const store = {
+export const sessionStore = {
   getSession,
   addSession,
   removeSession,

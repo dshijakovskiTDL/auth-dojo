@@ -1,22 +1,46 @@
-import { safeParse } from 'valibot';
+import * as v from 'valibot';
 import { createMiddleware } from 'hono/factory';
 import { vValidator } from '@hono/valibot-validator';
 
-import { AuthUser, loginSchema, registerSchema } from './credentials';
 import { database } from './db';
 import { verifyPassword } from './utils';
+import { ValidationMiddleware } from '.';
 
-export const validateRegister = vValidator('json', registerSchema, (result, c) => {
+export type RegisterUser = v.InferInput<typeof registerSchema>;
+
+const loginSchema = v.object({
+  email: v.pipe(v.string(), v.email()),
+  password: v.string(),
+});
+
+const registerSchema = v.object({
+  name: v.string(),
+  ...loginSchema.entries,
+});
+
+const registerAuthModeSchema = v.object({
+  authMode: v.picklist(['token', 'session']),
+});
+
+const validateRegister = vValidator('json', registerSchema, (result, c) => {
   if (!result.success) {
     return c.json({ error: 'Invalid request' }, 401);
   }
 });
 
-// Shared middleware for validating mock credentials for Token and Session routers
-export const validateCredentials = createMiddleware<{
-  Variables: { user: AuthUser };
-}>(async (c, next) => {
-  const result = safeParse(loginSchema, await c.req.json());
+const validateRegisterAuthMode = vValidator(
+  'query',
+  registerAuthModeSchema,
+  (result, c) => {
+    if (!result.success) {
+      return c.json({ error: 'Invalid auth mode' }, 401);
+    }
+  },
+);
+
+const validateCredentials = createMiddleware<ValidationMiddleware>(async (c, next) => {
+  const result = v.safeParse(loginSchema, await c.req.json());
+
   if (!result.success) {
     return c.json({ error: 'Invalid request' }, 400);
   }
@@ -42,3 +66,10 @@ export const validateCredentials = createMiddleware<{
 
   await next();
 });
+
+export const middleware = {
+  validateRegister,
+  validateRegisterAuthMode,
+
+  validateCredentials,
+};

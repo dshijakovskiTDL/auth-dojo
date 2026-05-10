@@ -1,8 +1,9 @@
 import { durationSeconds, hashValue } from '../shared/utils';
 import { redis, RedisKeyPrefix } from '../shared/redis';
-import { LoginUser } from '../shared/credentials';
+import { database } from '../shared/db';
+import { AuthUser } from '../shared';
 
-export type AccessToken = { user: LoginUser; exp: number; jti: string };
+export type AccessToken = { user: AuthUser; exp: number; jti: string };
 
 const STORE_PREFIX: RedisKeyPrefix = 'token:';
 const BLACKLIST_PREFIX: RedisKeyPrefix = `${STORE_PREFIX}blacklist:`;
@@ -14,17 +15,21 @@ const tokenKey = (token: string) => {
 
 const getUser = async (refreshToken: string) => {
   const key = tokenKey(refreshToken);
-  const user = await redis.get(key);
-  if (!user) return null;
 
-  return JSON.parse(user) as LoginUser;
+  const publicId = await redis.get(key);
+  if (!publicId) return null;
+
+  const userData = await database.getCredentialsUserById(publicId);
+  if (!userData) return null;
+
+  return database.toAuthUser(userData);
 };
 
-const addUser = async (refreshToken: string, user: LoginUser) => {
+const addUser = async (refreshToken: string, publicId: string) => {
   const key = tokenKey(refreshToken);
   const ttl = durationSeconds(1, 'days');
 
-  await redis.set(key, JSON.stringify(user), 'EX', ttl);
+  await redis.set(key, publicId, 'EX', ttl);
 };
 
 const removeUser = async (refreshToken: string) => {
@@ -46,10 +51,11 @@ const isBlacklisted = async (payload: AccessToken) => {
   return !!(await redis.get(`${BLACKLIST_PREFIX}${payload.jti}`));
 };
 
-export const store = {
+export const tokenStore = {
   getUser,
   addUser,
   removeUser,
+
   blacklistToken,
   isBlacklisted,
 };

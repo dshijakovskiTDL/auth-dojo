@@ -34,5 +34,5 @@ const mockUsers: User[] = [
 await db.delete(users);
 await db.insert(users).values(mockUsers);
 
-console.log('Database seeded ✅', mockUsers.length, 'users');
+console.info('Database seeded ✅', mockUsers.length, 'users');
 process.exit(0);

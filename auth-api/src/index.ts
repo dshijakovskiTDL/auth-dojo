@@ -6,8 +6,10 @@ import { redis } from './routers/shared/redis';
 import { tokensRouter } from './routers/token-router';
 import { sessionRouter } from './routers/session-router';
 import { oAuthRouter } from './routers/oauth-router';
-import { validateRegister } from './routers/shared/middleware';
+import { middleware } from './routers/shared/middleware';
 import { database } from './routers/shared/db';
+import { tokens } from './routers/token-router/tokens';
+import { sessions } from './routers/session-router/sessions';
 
 const frontendUrl = Bun.env.FRONTEND_URL || 'http://localhost:5173';
 
@@ -15,20 +17,32 @@ const app = new Hono();
 
 app.use(cors({ origin: [frontendUrl], credentials: true }));
 
-app.post('/signup', validateRegister, async (c) => {
-  const userData = c.req.valid('json');
+app.post(
+  '/signup',
+  middleware.validateRegisterAuthMode,
+  middleware.validateRegister,
+  async (c) => {
+    const userData = c.req.valid('json');
 
-  try {
-    const user = await database.registerCredentialsUser(userData);
+    try {
+      const user = await database.registerCredentialsUser(userData);
 
-    // TODO: Log user in maybe?
-    return c.json(user);
-  } catch (e) {
-    console.log(e);
+      const { authMode } = c.req.valid('query');
 
-    return c.json({ error: 'Failed to register user!' }, 500);
-  }
-});
+      if (authMode === 'token') {
+        await tokens.loginUser(c, user);
+      } else if (authMode === 'session') {
+        await sessions.loginUser(c, user);
+      }
+
+      return c.json(user);
+    } catch (e) {
+      console.error(e);
+
+      return c.json({ error: 'Failed to register user!' }, 500);
+    }
+  },
+);
 
 app.route('/token', tokensRouter);
 

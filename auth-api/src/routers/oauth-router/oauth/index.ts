@@ -1,8 +1,9 @@
 import { Context } from 'hono';
 import { randomBytes } from 'node:crypto';
-import { cookieOptions } from '../../shared/credentials';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
+
 import { durationSeconds } from '../../shared/utils';
+import { cookieOptions } from '../../shared';
 
 const SESSION_COOKIE = 'auth-dojo-oauth-session';
 

@@ -1,9 +1,11 @@
 import { and, eq } from 'drizzle-orm';
+
 import { db } from '../../db';
 import { OAuthProvider, users } from '../../db/schema';
-import { AuthUser, RegisterUser } from './credentials';
 import { hashPassword } from './utils';
 import { GoogleUser } from '../oauth-router/oauth/google';
+import { RegisterUser } from './middleware';
+import { AuthUser } from '.';
 
 const getCredentialsUserByEmail = async (email: string) => {
   const [userData] = await db
@@ -117,10 +119,10 @@ const registerOAuthUser = async <TMethod extends 'google' | 'github'>(
   throw new Error('Not implemented yet');
 };
 
-const toAuthUser = (userData: typeof users.$inferSelect) => {
+const toAuthUser = (userData: typeof users.$inferSelect): AuthUser => {
   const { email, firstName, lastName, publicId, avatarUrl } = userData;
 
-  return { email, firstName, lastName, publicId, avatarUrl } as AuthUser;
+  return { email, firstName, lastName, publicId, avatarUrl };
 };
 
 export const database = {

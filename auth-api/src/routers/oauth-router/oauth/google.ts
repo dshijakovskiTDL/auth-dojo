@@ -1,8 +1,29 @@
 import { Context } from 'hono';
+
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { cookieOptions } from '../../shared/credentials';
-import { GoogleCallbackSchema } from '../middleware';
+
 import { oAuth } from '.';
+import { GoogleCallbackSchema } from '../middleware';
+import { cookieOptions } from '../../shared';
+
+const apiUrl = Bun.env.API_URL || 'http://localhost:3000';
+const REDIRECT_API_URL = `${apiUrl}/oauth/google/callback`;
+
+const REDIRECT_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+const TOKEN_EXCHANGE_URL = 'https://oauth2.googleapis.com/token';
+const USER_DATA_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
+
+const STATE_COOKIE = 'auth-dojo-google-state';
+const CODE_VERIFIER_COOKIE = 'auth-dojo-google-code-verifier';
+
+export type GoogleUser = {
+  id: string;
+  email: string;
+  name: string;
+  given_name: string;
+  family_name: string;
+  picture: string;
+};
 
 const base64url = (arr: Uint8Array) => {
   return btoa(String.fromCharCode(...arr))
@@ -21,25 +42,6 @@ export const generateChallenge = async (verifier: string) => {
       await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)),
     ),
   );
-};
-
-const apiUrl = Bun.env.API_URL || 'http://localhost:3000';
-
-const REDIRECT_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
-const TOKEN_EXCHANGE_URL = 'https://oauth2.googleapis.com/token';
-const USER_DATA_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
-
-const REDIRECT_API_URL = `${apiUrl}/oauth/google/callback`;
-const STATE_COOKIE = 'auth-dojo-google-state';
-const CODE_VERIFIER_COOKIE = 'auth-dojo-google-code-verifier';
-
-export type GoogleUser = {
-  id: string;
-  email: string;
-  name: string;
-  given_name: string;
-  family_name: string;
-  picture: string;
 };
 
 const generateLoginCodes = async () => {

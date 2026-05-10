@@ -6,8 +6,8 @@ import { randomBytes } from 'node:crypto';
 import { randomUUIDv7 } from 'bun';
 
 import { durationSeconds, tokenExpiry } from '../shared/utils';
-import { AccessToken } from './store';
-import { cookieOptions, LoginUser } from '../shared/credentials';
+import { AccessToken, tokenStore } from './store';
+import { AuthUser, cookieOptions } from '../shared';
 
 const jwtSecret = Bun.env.JWT_SECRET || randomBytes(32).toString('hex');
 const jwtAlgo: SignatureAlgorithm = 'HS256';
@@ -15,11 +15,11 @@ const jwtAlgo: SignatureAlgorithm = 'HS256';
 const ACCESS_TOKEN = 'auth-dojo-access-token';
 const REFRESH_TOKEN = 'auth-dojo-refresh-token';
 
-const getAccessToken = (c: Context) => {
+const accessToken = (c: Context) => {
   return getCookie(c, ACCESS_TOKEN);
 };
 
-const getRefreshToken = (c: Context) => {
+const refreshToken = (c: Context) => {
   return getCookie(c, REFRESH_TOKEN);
 };
 
@@ -27,7 +27,7 @@ const verifyAccessToken = async (accessToken: string) => {
   return (await verify(accessToken, jwtSecret, jwtAlgo)) as AccessToken;
 };
 
-const generateTokens = async (user: LoginUser) => {
+const generateTokens = async (user: AuthUser) => {
   const payload: AccessToken = {
     user,
     exp: tokenExpiry(15, 'minutes'),
@@ -61,13 +61,47 @@ const deleteCookies = (c: Context) => {
   deleteCookie(c, REFRESH_TOKEN);
 };
 
-export const tokens = {
-  getAccessToken,
-  getRefreshToken,
+const loginUser = async (c: Context, user: AuthUser) => {
+  // 1. Generate access and refresh tokens
+  const { accessToken, refreshToken } = await generateTokens(user);
 
-  verifyAccessToken,
+  // 2. Set appropriate cookies for the tokens
+  setCookies(c, { accessToken, refreshToken });
+
+  // 3. Associate the refresh token with the user
+  await tokenStore.addUser(refreshToken, user.publicId);
+};
+
+const logoutUser = async (c: Context) => {
+  const rToken = refreshToken(c);
+
+  // 1. Remove refresh token from DB
+  if (rToken) {
+    await tokenStore.removeUser(rToken);
+  }
+
+  const aToken = accessToken(c);
+
+  // 2. Blacklist access token until it expires
+  if (aToken) {
+    const payload = await verifyAccessToken(aToken);
+    await tokenStore.blacklistToken(payload);
+  }
+
+  // 3. Delete both cookies
+  deleteCookies(c);
+};
+
+export const tokens = {
   generateTokens,
+
+  accessToken,
+  refreshToken,
+  verifyAccessToken,
 
   setCookies,
   deleteCookies,
+
+  loginUser,
+  logoutUser,
 };

@@ -1,35 +1,20 @@
 import { Hono } from 'hono';
-import { validateCredentials } from '../shared/middleware';
+import { middleware } from '../shared/middleware';
 import { sessions } from './sessions';
-import { store } from './store';
 import { validateSession } from './middleware';
 
 const router = new Hono();
 
-router.post('/login', validateCredentials, async (c) => {
+router.post('/login', middleware.validateCredentials, async (c) => {
   const user = c.get('user');
 
-  // 1. Generate session ID
-  const sessionId = sessions.generateSessionId();
-
-  // 2. Set session cookie
-  sessions.setSessionCookie(c, sessionId);
-
-  // 3. Associate the session ID with the user
-  await store.addSession(sessionId, user.publicId);
-
-  c.status(200);
+  await sessions.loginUser(c, user);
 
   return c.json(user);
 });
 
 router.post('/logout', async (c) => {
-  const sessionId = sessions.getSessionCookie(c);
-
-  if (sessionId) {
-    await store.removeSession(sessionId);
-    sessions.deleteSessionCookie(c);
-  }
+  await sessions.logoutUser(c);
 
   return c.json({ ok: true });
 });
