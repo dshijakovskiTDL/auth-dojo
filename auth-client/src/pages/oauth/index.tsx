@@ -1,5 +1,5 @@
 const OAuthDemo = () => {
-  return <div>OAuthDemo</div>;
+  return <p>OAuth Demo</p>;
 };
 
 export default OAuthDemo;

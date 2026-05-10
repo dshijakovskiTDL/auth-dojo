@@ -5,6 +5,7 @@ import { showRoutes } from 'hono/dev';
 import { redis } from './routers/shared/redis';
 import { tokensRouter } from './routers/token-router';
 import { sessionRouter } from './routers/session-router';
+import { oAuthRouter } from './routers/oauth-router';
 
 const frontendUrl = Bun.env.FRONTEND_URL || 'http://localhost:5173';
 
@@ -15,6 +16,8 @@ app.use(cors({ origin: [frontendUrl], credentials: true }));
 app.route('/token', tokensRouter);
 
 app.route('/session', sessionRouter);
+
+app.route('/oauth', oAuthRouter);
 
 app.get('/health', async (c) => {
   try {

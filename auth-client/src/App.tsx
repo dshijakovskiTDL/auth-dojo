@@ -5,7 +5,8 @@ import Footer from './components/footer';
 import Header from './components/header';
 import LoginForm from './components/login/login-form';
 import Homepage from './pages/home';
-import OAuthDemo from './pages/oauth';
+import OAuthLayout from './pages/oauth/layout';
+import OAuthForm from './pages/oauth/login-form';
 import SessionLayout from './pages/session/layout';
 import TokensLayout from './pages/tokens/layout';
 
@@ -36,7 +37,14 @@ function App() {
             </Route>
           </Route>
 
-          <Route path="oauth" element={<OAuthDemo />} />
+          <Route path="oauth">
+            <Route element={<OAuthLayout mode="auth" />}>
+              <Route index element={<Dashboard authRoute="oauth" />} />
+            </Route>
+
+            <Route element={<OAuthLayout mode="no-auth" />}></Route>
+            <Route path="login" element={<OAuthForm />} />
+          </Route>
 
           <Route path="/" element={<Homepage />} />
         </Routes>

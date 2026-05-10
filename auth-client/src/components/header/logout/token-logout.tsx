@@ -1,5 +1,5 @@
+import LogoutButton from '.';
 import { useTokenUser } from '../../../context/token-user';
-import LogoutButton from './logout';
 
 const TokenLogout = () => {
   const { user, isLoading } = useTokenUser();

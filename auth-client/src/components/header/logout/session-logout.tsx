@@ -1,5 +1,5 @@
+import LogoutButton from '.';
 import { useSessionUser } from '../../../context/session-user';
-import LogoutButton from './logout';
 
 const SessionLogout = () => {
   const { user, isLoading } = useSessionUser();

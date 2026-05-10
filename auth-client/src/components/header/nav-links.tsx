@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router';
 
+import { useOAuthUser } from '../../context/oauth-user';
 import { useSessionUser } from '../../context/session-user';
 import { useTokenUser } from '../../context/token-user';
 import { AuthType, authTypes } from '../../utils/types';
@@ -7,17 +8,20 @@ import { AuthType, authTypes } from '../../utils/types';
 const NavLinks = () => {
   const { user: tokenUser } = useTokenUser();
   const { user: sessionUser } = useSessionUser();
+  const { user: oAuthUser } = useOAuthUser();
 
   const showLoggedInStatus = (authType: AuthType) => {
     if (authType === 'Token' && tokenUser) return true;
 
     if (authType === 'Session' && sessionUser) return true;
 
+    if (authType === 'OAuth' && oAuthUser) return true;
+
     return false;
   };
 
   return (
-    <ul className="flex items-center gap-8">
+    <ul className="flex items-center gap-4">
       {authTypes.map((aType) => (
         <li key={aType} className="relative">
           <NavLink
@@ -28,7 +32,9 @@ const NavLinks = () => {
 
             {showLoggedInStatus(aType) && (
               <span className="absolute top-0 right-0 z-100 translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-300 p-1.5 text-xs font-semibold text-slate-900">
+                <span className="sr-only">Logged in</span>
                 <svg
+                  aria-hidden="true"
                   className="size-3 fill-slate-900"
                   viewBox="0 0 16 16"
                   xmlns="http://www.w3.org/2000/svg"

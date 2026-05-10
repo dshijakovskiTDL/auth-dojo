@@ -4,5 +4,8 @@ declare module 'bun' {
     FRONTEND_URL: string;
     REDIS_URL: string;
     BUN_DEV: 'development' | 'production';
+
+    GOOGLE_CLIENT_ID: string;
+    GOOGLE_CLIENT_SECRET: string;
   }
 }

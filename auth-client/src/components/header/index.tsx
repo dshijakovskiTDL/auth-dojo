@@ -1,7 +1,8 @@
 import { Link, Route, Routes } from 'react-router';
 
-import SessionLogout from './logout-buttons/session-logout';
-import TokenLogout from './logout-buttons/token-logout';
+import OAuthLogout from './logout/oauth-logout';
+import SessionLogout from './logout/session-logout';
+import TokenLogout from './logout/token-logout';
 import NavLinks from './nav-links';
 
 const Header = () => {
@@ -17,7 +18,7 @@ const Header = () => {
 
           <Route path="session/*" element={<SessionLogout />}></Route>
 
-          <Route path="oauth/*" element={<p>OAuth Navbar</p>}></Route>
+          <Route path="oauth/*" element={<OAuthLogout />}></Route>
 
           <Route path="*" element={<NavLinks />}></Route>
         </Routes>

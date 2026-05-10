@@ -16,8 +16,12 @@ a,
 button {
   @apply cursor-pointer transition-[scale] duration-150 active:scale-[0.97];
 
+  &[data-oauth] {
+    @apply flex min-w-70 items-center justify-center gap-[1ch] rounded-sm px-4 py-2 ring ring-slate-900 hover:ring-2 focus-visible:ring-2;
+  }
+
   &:disabled {
-    @apply pointer-events-none! bg-gray-400! text-slate-900!;
+    @apply pointer-events-none! bg-gray-300! text-slate-900! ring-slate-300!;
   }
 }
 

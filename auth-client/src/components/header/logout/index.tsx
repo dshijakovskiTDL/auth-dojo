@@ -2,7 +2,7 @@ import { useLogout } from '../../../hooks/use-logout';
 import { AuthRoute } from '../../../utils/api';
 
 const Skeleton = () => {
-  return <div className="h-8 w-24 animate-pulse rounded-sm bg-slate-500/20"></div>;
+  return <div className="h-9 w-24 animate-pulse rounded-sm bg-slate-500/20"></div>;
 };
 
 type Props = {

@@ -14,6 +14,13 @@ const ROUTES = {
     logout: '/session/logout',
     dashboard: '/session/dashboard',
   },
+
+  oauth: {
+    me: '/oauth/me',
+    login: '/oauth/login',
+    logout: '/oauth/logout',
+    dashboard: '/oauth/dashboard',
+  },
 };
 
 export type AuthRoute = keyof typeof ROUTES;
