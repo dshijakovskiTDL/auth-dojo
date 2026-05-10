@@ -1,11 +1,5 @@
 import { CookieOptions } from 'hono/utils/cookie';
-import * as v from 'valibot';
-
-export const secretLogin = {
-  email: 'daniel@correct.com',
-  password: 'secret123',
-  userId: 'user_123',
-};
+import { object, email, pipe, string, InferInput } from 'valibot';
 
 export const cookieOptions: CookieOptions = {
   httpOnly: true,
@@ -14,9 +8,22 @@ export const cookieOptions: CookieOptions = {
   path: '/',
 };
 
-export const loginSchema = v.object({
-  email: v.pipe(v.string(), v.email()),
-  password: v.string(),
+export const loginSchema = object({
+  email: pipe(string(), email()),
+  password: string(),
 });
 
-export type LoginUser = { email: string; userId: string };
+export const registerSchema = object({
+  name: string(),
+  ...loginSchema.entries,
+});
+
+export type RegisterUser = InferInput<typeof registerSchema>;
+
+export type AuthUser = {
+  email: string;
+  publicId: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+};

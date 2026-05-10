@@ -1,11 +1,20 @@
 import { safeParse } from 'valibot';
 import { createMiddleware } from 'hono/factory';
+import { vValidator } from '@hono/valibot-validator';
 
-import { loginSchema, LoginUser, secretLogin } from './credentials';
+import { AuthUser, loginSchema, registerSchema } from './credentials';
+import { database } from './db';
+import { verifyPassword } from './utils';
+
+export const validateRegister = vValidator('json', registerSchema, (result, c) => {
+  if (!result.success) {
+    return c.json({ error: 'Invalid request' }, 401);
+  }
+});
 
 // Shared middleware for validating mock credentials for Token and Session routers
 export const validateCredentials = createMiddleware<{
-  Variables: { user: LoginUser };
+  Variables: { user: AuthUser };
 }>(async (c, next) => {
   const result = safeParse(loginSchema, await c.req.json());
   if (!result.success) {
@@ -14,14 +23,22 @@ export const validateCredentials = createMiddleware<{
 
   const { email, password } = result.output;
 
-  if (email !== secretLogin.email) {
+  // 1. Check if email exists/Get user from DB
+  const user = await database.getCredentialsUserByEmail(email);
+
+  if (!user) {
     return c.json({ error: 'Email is incorrect' }, 401);
   }
 
-  if (password !== secretLogin.password) {
+  // 2. Check if password is correct
+  const validPassword = await verifyPassword(password, user.password!);
+
+  if (!validPassword) {
     return c.json({ error: 'Password is incorrect' }, 401);
   }
 
-  c.set('user', { email, userId: secretLogin.userId });
+  // Return user from DB
+  c.set('user', database.toAuthUser(user));
+
   await next();
 });

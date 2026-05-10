@@ -1,9 +1,9 @@
 import { createMiddleware } from 'hono/factory';
-import { LoginUser } from '../shared/credentials';
+import { AuthUser } from '../shared/credentials';
 import { sessions } from './sessions';
 import { store } from './store';
 
-type ValidateSessionMiddleware = { Variables: { user: LoginUser } };
+type ValidateSessionMiddleware = { Variables: { user: AuthUser } };
 
 export const validateSession = createMiddleware<ValidateSessionMiddleware>(
   async (c, next) => {

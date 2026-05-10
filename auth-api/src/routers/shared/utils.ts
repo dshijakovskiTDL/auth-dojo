@@ -12,3 +12,11 @@ export const tokenExpiry = (value: number, unit: DurationUnit) => {
 export const hashValue = (value: string) => {
   return Bun.hash(value);
 };
+
+export const hashPassword = (password: string) => {
+  return Bun.password.hash(password, 'bcrypt');
+};
+
+export const verifyPassword = (password: string, hashedPassword: string) => {
+  return Bun.password.verify(password, hashedPassword, 'bcrypt');
+};

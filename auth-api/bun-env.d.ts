@@ -7,5 +7,8 @@ declare module 'bun' {
 
     GOOGLE_CLIENT_ID: string;
     GOOGLE_CLIENT_SECRET: string;
+
+    TURSO_DB_URL: string;
+    TURSO_DB_TOKEN: string;
   }
 }

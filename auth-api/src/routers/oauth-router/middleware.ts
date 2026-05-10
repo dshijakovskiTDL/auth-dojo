@@ -3,8 +3,9 @@ import { createMiddleware } from 'hono/factory';
 import { InferInput, object, picklist, string } from 'valibot';
 import { oAuth } from './oauth';
 import { oAuthStore } from './store';
+import { AuthUser } from '../shared/credentials';
 
-type ValidateSessionMiddleware = { Variables: { user: { id: string } } };
+type ValidateSessionMiddleware = { Variables: { user: AuthUser } };
 
 export const validateOAuthSession = createMiddleware<ValidateSessionMiddleware>(
   async (c, next) => {
@@ -23,7 +24,7 @@ export const validateOAuthSession = createMiddleware<ValidateSessionMiddleware>(
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
-    c.set('user', user as { id: string });
+    c.set('user', user);
 
     return next();
   },
@@ -34,12 +35,25 @@ export const validateOAuthMethod = vValidator(
   object({
     method: picklist(['google', 'github']),
   }),
+  (result, c) => {
+    if (!result.success) {
+      return c.json({ error: 'Invalid OAuth method!' }, 401);
+    }
+  },
 );
 
 const GoogleCallbackSchema = object({
   code: string(),
   state: string(),
 });
-export const validateGoogleCallback = vValidator('query', GoogleCallbackSchema);
+export const validateGoogleCallback = vValidator(
+  'query',
+  GoogleCallbackSchema,
+  (result, c) => {
+    if (!result.success) {
+      return c.json({ error: 'Invalid callback schema!' }, 400);
+    }
+  },
+);
 
 export type GoogleCallbackSchema = InferInput<typeof GoogleCallbackSchema>;

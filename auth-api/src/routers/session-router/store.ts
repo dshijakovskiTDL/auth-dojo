@@ -1,4 +1,5 @@
-import { LoginUser } from '../shared/credentials';
+import { AuthUser } from '../shared/credentials';
+import { database } from '../shared/db';
 import { redis, RedisKeyPrefix } from '../shared/redis';
 import { durationSeconds, hashValue } from '../shared/utils';
 
@@ -12,17 +13,20 @@ const sessionKey = (sessionId: string) => {
 export const getSession = async (sessionId: string) => {
   const key = sessionKey(sessionId);
 
-  const user = await redis.get(key);
-  if (!user) return null;
+  const publicId = await redis.get(key);
+  if (!publicId) return null;
 
-  return JSON.parse(user) as LoginUser;
+  const userData = await database.getCredentialsUserById(publicId);
+  if (!userData) return null;
+
+  return database.toAuthUser(userData);
 };
 
-export const addSession = async (sessionId: string, user: LoginUser) => {
+export const addSession = async (sessionId: string, publicId: string) => {
   const key = sessionKey(sessionId);
   const ttl = durationSeconds(1, 'days');
 
-  await redis.set(key, JSON.stringify(user), 'EX', ttl);
+  await redis.set(key, publicId, 'EX', ttl);
 };
 
 export const removeSession = async (sessionId: string) => {

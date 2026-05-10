@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { AuthRoute, getApiUrl } from '../utils/api';
+import { LoginUser } from '../utils/types';
 
 export const useDashboard = (authRoute: AuthRoute) => {
   const { data, isLoading, error } = useQuery({
@@ -16,9 +17,9 @@ export const useDashboard = (authRoute: AuthRoute) => {
         throw new Error(error);
       }
 
-      const { data } = (await response.json()) as { data: string };
+      const dashboardData = (await response.json()) as { data: string; user: LoginUser };
 
-      return data;
+      return dashboardData;
     },
   });
 

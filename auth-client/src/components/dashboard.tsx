@@ -15,8 +15,22 @@ const Dashboard = ({ authRoute }: Props) => {
       {error && <p className="font-semibold text-red-500">{error.message}</p>}
 
       {data && (
-        <div className="grid place-content-center gap-4">
-          <p>{data}</p>
+        <div className="grid place-content-center gap-4 text-center">
+          <p className="text-lg font-semibold">{data.data}</p>
+
+          <div className="flex items-center gap-4">
+            {data.user.avatarUrl && (
+              <img
+                src={data.user.avatarUrl}
+                referrerPolicy="no-referrer" // important for Google avatar URLs
+                className="rounded-full size-10"
+              />
+            )}
+
+            <p>
+              {data.user.firstName} {data.user.lastName}
+            </p>
+          </div>
         </div>
       )}
     </>

@@ -1,32 +1,19 @@
 import { redis, RedisKeyPrefix } from '../shared/redis';
 import { durationSeconds, hashValue } from '../shared/utils';
+import { database } from '../shared/db';
 
-const USERS_PREFIX: RedisKeyPrefix = 'oauth:users:';
 const SESSION_PREFIX: RedisKeyPrefix = 'oauth:sessions:';
-
-const usersKey = (userId: string) => {
-  return `${USERS_PREFIX}${userId}`;
-};
 
 const sessionKey = (sessionId: string) => {
   const hashedSessionId = hashValue(sessionId);
   return `${SESSION_PREFIX}${hashedSessionId}`;
 };
 
-const addUser = async (userData: { id: string }) => {
-  const key = usersKey(userData.id);
-
-  const userExists = await redis.exists(key);
-  if (userExists) return;
-
-  await redis.set(key, JSON.stringify(userData));
-};
-
-const addSession = async (sessionId: string, userId: string) => {
+const addSession = async (sessionId: string, providerId: string) => {
   const key = sessionKey(sessionId);
   const ttl = durationSeconds(1, 'days');
 
-  await redis.set(key, userId, 'EX', ttl);
+  await redis.set(key, providerId, 'EX', ttl);
 };
 
 const removeSession = async (sessionId: string) => {
@@ -38,19 +25,17 @@ const removeSession = async (sessionId: string) => {
 const getSession = async (sessionId: string) => {
   const key = sessionKey(sessionId);
 
-  const userId = await redis.get(key);
-  if (!userId) return null;
+  const providerId = await redis.get(key);
+  if (!providerId) return null;
 
-  const userKey = usersKey(userId);
+  const user = await database.getOAuthUser(providerId);
 
-  const user = await redis.get(userKey);
   if (!user) return null;
 
-  return JSON.parse(user) as unknown;
+  return database.toAuthUser(user);
 };
 
 export const oAuthStore = {
-  addUser,
   addSession,
   removeSession,
   getSession,

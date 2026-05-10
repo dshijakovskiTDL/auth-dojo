@@ -16,7 +16,7 @@ router.post('/login', validateCredentials, async (c) => {
   sessions.setSessionCookie(c, sessionId);
 
   // 3. Associate the session ID with the user
-  await store.addSession(sessionId, user);
+  await store.addSession(sessionId, user.publicId);
 
   c.status(200);
 
@@ -41,7 +41,7 @@ router.get('/me', validateSession, (c) => {
 router.get('/dashboard', validateSession, (c) => {
   const user = c.get('user');
 
-  return c.json({ data: `${user.email}: Dummy data` });
+  return c.json({ data: `${user.email}: Dummy data`, user });
 });
 
 export { router as sessionRouter };

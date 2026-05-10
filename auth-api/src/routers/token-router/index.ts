@@ -54,7 +54,7 @@ router.get('/me', validateTokens, async (c) => {
 router.get('/dashboard', validateTokens, (c) => {
   const user = c.get('user');
 
-  return c.json({ data: `${user.email}: Dummy data` });
+  return c.json({ data: `${user.email}: Dummy data`, user });
 });
 
 export { router as tokensRouter };
