@@ -4,7 +4,7 @@ export const users = sqliteTable('users', {
   id: int().primaryKey({ autoIncrement: true }),
   publicId: text().notNull().unique(), // UUIDv7, exposed externally
 
-  email: text().notNull().unique(),
+  email: text().notNull(),
   firstName: text().notNull(),
   lastName: text().notNull(),
   avatarUrl: text(),

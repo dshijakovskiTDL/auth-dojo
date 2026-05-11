@@ -1,20 +1,7 @@
-import { Context } from 'hono';
-
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 
-import { oAuth } from '.';
-import { GoogleCallbackSchema } from '../middleware';
+import { oAuth, OAuthModule } from '.';
 import { cookieOptions } from '../../shared';
-
-const apiUrl = Bun.env.API_URL || 'http://localhost:3000';
-const REDIRECT_API_URL = `${apiUrl}/oauth/google/callback`;
-
-const REDIRECT_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
-const TOKEN_EXCHANGE_URL = 'https://oauth2.googleapis.com/token';
-const USER_DATA_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
-
-const STATE_COOKIE = 'auth-dojo-google-state';
-const CODE_VERIFIER_COOKIE = 'auth-dojo-google-code-verifier';
 
 export type GoogleUser = {
   id: string;
@@ -25,40 +12,19 @@ export type GoogleUser = {
   picture: string;
 };
 
-const base64url = (arr: Uint8Array) => {
-  return btoa(String.fromCharCode(...arr))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-};
+const config = oAuth.createConfig('google', {
+  authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenUrl: 'https://oauth2.googleapis.com/token',
+  userDataUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+});
 
-export const generateVerifier = () => {
-  return base64url(crypto.getRandomValues(new Uint8Array(32)));
-};
-
-export const generateChallenge = async (verifier: string) => {
-  return base64url(
-    new Uint8Array(
-      await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)),
-    ),
-  );
-};
-
-const generateLoginCodes = async () => {
-  const state = oAuth.generateRandomState();
-  const codeVerifier = generateVerifier();
-  const codeChallenge = await generateChallenge(codeVerifier);
-
-  return { state, codeVerifier, codeChallenge };
-};
-
-const googleRedirectUrl = (codes: { state: string; codeChallenge: string }) => {
+const googleAuthUrl = (codes: { state: string; codeChallenge: string }) => {
   const { state, codeChallenge } = codes;
 
-  const url = new URL(REDIRECT_URL);
+  const url = new URL(config.authUrl);
 
   url.searchParams.set('client_id', Bun.env.GOOGLE_CLIENT_ID!);
-  url.searchParams.set('redirect_uri', REDIRECT_API_URL);
+  url.searchParams.set('redirect_uri', config.redirectUrl);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('scope', 'openid email profile');
 
@@ -72,7 +38,7 @@ const googleRedirectUrl = (codes: { state: string; codeChallenge: string }) => {
 const exchangeToken = async (codes: { code: string; codeVerifier: string }) => {
   const { code, codeVerifier } = codes;
 
-  const response = await fetch(TOKEN_EXCHANGE_URL, {
+  const response = await fetch(config.tokenUrl, {
     method: 'POST',
     body: JSON.stringify({
       code,
@@ -81,7 +47,7 @@ const exchangeToken = async (codes: { code: string; codeVerifier: string }) => {
       client_id: Bun.env.GOOGLE_CLIENT_ID,
       client_secret: Bun.env.GOOGLE_CLIENT_SECRET,
 
-      redirect_uri: REDIRECT_API_URL,
+      redirect_uri: config.redirectUrl,
       grant_type: 'authorization_code',
     }),
   });
@@ -92,7 +58,7 @@ const exchangeToken = async (codes: { code: string; codeVerifier: string }) => {
 };
 
 const getUserData = async (accessToken: string) => {
-  const response = await fetch(USER_DATA_URL, {
+  const response = await fetch(config.userDataUrl, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -103,51 +69,48 @@ const getUserData = async (accessToken: string) => {
   return userData;
 };
 
-const login = async (c: Context) => {
-  // 1. Generate state, code verifier, code challenge
-  const { state, codeChallenge, codeVerifier } = await generateLoginCodes();
+export const googleOAuth: OAuthModule<GoogleUser> = {
+  login: async (c) => {
+    // 1. Generate state, code verifier, code challenge
+    const { state, codeChallenge, codeVerifier } = await oAuth.generateLoginCodes();
 
-  // 2. Set cookies for state and code verifier
-  setCookie(c, STATE_COOKIE, state, {
-    ...cookieOptions,
-    sameSite: 'lax',
-    maxAge: 5 * 60, // 5 minutes
-  });
+    // 2. Set cookies for state and code verifier
+    setCookie(c, config.cookies.state, state, {
+      ...cookieOptions,
+      sameSite: 'lax',
+      maxAge: 5 * 60, // 5 minutes
+    });
 
-  setCookie(c, CODE_VERIFIER_COOKIE, codeVerifier, {
-    ...cookieOptions,
-    sameSite: 'lax',
-    maxAge: 5 * 60, // 5 minutes
-  });
+    setCookie(c, config.cookies.codeVerifier, codeVerifier, {
+      ...cookieOptions,
+      sameSite: 'lax',
+      maxAge: 5 * 60, // 5 minutes
+    });
 
-  // 3. Construct redirect url
-  return googleRedirectUrl({ state, codeChallenge });
-};
+    // 3. Construct auth url
+    return googleAuthUrl({ state, codeChallenge });
+  },
 
-const loginCallback = async (c: Context, { state, code }: GoogleCallbackSchema) => {
-  const serverState = getCookie(c, STATE_COOKIE)!;
+  loginCallback: async (c, { state, code }) => {
+    const serverState = getCookie(c, config.cookies.state)!;
 
-  // 1. CSRF protection - state mismatch check
-  if (serverState !== state) {
-    throw new Error('State mismatch!');
-  }
+    // 1. CSRF protection - state mismatch check
+    if (serverState !== state) {
+      throw new Error('State mismatch!');
+    }
 
-  const codeVerifier = getCookie(c, CODE_VERIFIER_COOKIE)!;
+    const codeVerifier = getCookie(c, config.cookies.codeVerifier)!;
 
-  // 2. Clear cookies - invalidate state for multiple usage
-  deleteCookie(c, STATE_COOKIE);
-  deleteCookie(c, CODE_VERIFIER_COOKIE);
+    // 2. Clear cookies - invalidate state for multiple usage
+    deleteCookie(c, config.cookies.state);
+    deleteCookie(c, config.cookies.codeVerifier);
 
-  // 3. Exchange code for token
-  const tokenData = await exchangeToken({ code, codeVerifier });
+    // 3. Exchange code for token
+    const tokenData = await exchangeToken({ code, codeVerifier });
 
-  // 4. Get user info with token
-  const userData = await getUserData(tokenData.access_token);
+    // 4. Get user info with token
+    const userData = await getUserData(tokenData.access_token);
 
-  return userData;
-};
-
-export const googleOAuth = {
-  login,
-  loginCallback,
+    return userData;
+  },
 };

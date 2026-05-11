@@ -39,9 +39,9 @@ const validateOAuthMethod = vValidator(
   },
 );
 
-const googleCallbackSchema = object({ code: string(), state: string() });
+const callbackSchema = object({ code: string(), state: string() });
 
-const validateGoogleCallback = vValidator('query', googleCallbackSchema, (result, c) => {
+const validateCallback = vValidator('query', callbackSchema, (result, c) => {
   if (!result.success) {
     return c.json({ error: 'Invalid callback schema!' }, 400);
   }
@@ -51,7 +51,7 @@ export const oAuthMiddleware = {
   validateOAuthSession,
   validateOAuthMethod,
 
-  validateGoogleCallback,
+  validateCallback,
 };
 
-export type GoogleCallbackSchema = InferInput<typeof googleCallbackSchema>;
+export type CallbackSchema = InferInput<typeof callbackSchema>;

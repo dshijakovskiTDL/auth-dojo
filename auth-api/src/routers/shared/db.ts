@@ -6,6 +6,7 @@ import { hashPassword } from './utils';
 import { GoogleUser } from '../oauth-router/oauth/google';
 import { RegisterUser } from './middleware';
 import { AuthUser } from '.';
+import { GithubUser } from '../oauth-router/oauth/github';
 
 const getCredentialsUserByEmail = async (email: string) => {
   const [userData] = await db
@@ -108,15 +109,61 @@ const registerGoogleUser = async (userData: GoogleUser) => {
   return user;
 };
 
+const registerGithubUser = async (userData: GithubUser) => {
+  const { email, avatar_url, name, login, id } = userData;
+
+  const providerId = String(id);
+
+  let firstName = '';
+  let lastName = '';
+
+  if (name) {
+    let [fName, ...restOfName] = name.split(' ');
+    firstName = fName;
+    lastName = restOfName.join(' ');
+  } else {
+    firstName = login;
+  }
+
+  // 1. Check if user exists
+  const existingUser = await getOAuthUser(providerId, 'github');
+  if (existingUser) return existingUser;
+
+  const publicId = Bun.randomUUIDv7();
+
+  // 2. Insert into DB
+  const [user] = await db
+    .insert(users)
+    .values({
+      email: email ?? 'unknown@github.com',
+      firstName,
+      lastName,
+      avatarUrl: avatar_url,
+
+      publicId,
+
+      authType: 'oauth',
+      provider: 'github',
+      providerId,
+    })
+    .returning();
+
+  return user;
+};
+
 const registerOAuthUser = async <TMethod extends 'google' | 'github'>(
   method: TMethod,
-  userData: TMethod extends 'google' ? GoogleUser : unknown,
+  userData: TMethod extends 'google' ? GoogleUser : GithubUser,
 ) => {
   if (method === 'google') {
     return await registerGoogleUser(userData as GoogleUser);
   }
 
-  throw new Error('Not implemented yet');
+  if (method === 'github') {
+    return await registerGithubUser(userData as GithubUser);
+  }
+
+  throw new Error('Invalid OAuth registration method');
 };
 
 const toAuthUser = (userData: typeof users.$inferSelect): AuthUser => {

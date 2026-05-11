@@ -43,7 +43,7 @@ const OAuthForm = () => {
           </svg>
         </button>
 
-        <button type="button" data-oauth disabled onClick={() => oAuthLogin('github')}>
+        <button type="button" data-oauth onClick={() => oAuthLogin('github')}>
           <span>Login with GitHub</span>
           <svg aria-hidden="true" className="size-5" viewBox="0 0 20 20">
             <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
