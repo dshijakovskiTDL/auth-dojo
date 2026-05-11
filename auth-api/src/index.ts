@@ -10,6 +10,7 @@ import { middleware } from './routers/shared/middleware';
 import { database } from './routers/shared/db';
 import { tokens } from './routers/token-router/tokens';
 import { sessions } from './routers/session-router/sessions';
+import { twoFactorRouter } from './routers/2fa-router';
 
 const frontendUrl = Bun.env.FRONTEND_URL || 'http://localhost:5173';
 
@@ -33,6 +34,8 @@ app.post(
         await tokens.loginUser(c, user);
       } else if (authMode === 'session') {
         await sessions.loginUser(c, user);
+      } else if (authMode === '2fa') {
+        // No login - need to go through 2FA steps
       }
 
       return c.json(user);
@@ -49,6 +52,8 @@ app.route('/token', tokensRouter);
 app.route('/session', sessionRouter);
 
 app.route('/oauth', oAuthRouter);
+
+app.route('/2fa', twoFactorRouter);
 
 app.get('/health', async (c) => {
   try {

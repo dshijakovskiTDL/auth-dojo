@@ -2,7 +2,7 @@ import { database } from '../shared/db';
 import { redis, RedisKeyPrefix } from '../shared/redis';
 import { durationSeconds, hashValue } from '../shared/utils';
 
-export const STORE_PREFIX: RedisKeyPrefix = 'session:';
+const STORE_PREFIX: RedisKeyPrefix = 'session:';
 
 const sessionKey = (sessionId: string) => {
   const hashedSessionId = hashValue(sessionId);

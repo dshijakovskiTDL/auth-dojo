@@ -4,7 +4,7 @@ import { sessions } from './sessions';
 import { sessionStore } from './store';
 import { ValidationMiddleware } from '../shared';
 
-export const validateSession = createMiddleware<ValidationMiddleware>(async (c, next) => {
+const validateSession = createMiddleware<ValidationMiddleware>(async (c, next) => {
   const sessionId = sessions.getSessionCookie(c);
 
   if (!sessionId) {
@@ -23,3 +23,7 @@ export const validateSession = createMiddleware<ValidationMiddleware>(async (c, 
   c.set('user', user);
   return next();
 });
+
+export const sessionMiddleware = {
+  validateSession,
+};

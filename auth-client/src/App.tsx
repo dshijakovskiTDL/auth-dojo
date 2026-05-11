@@ -3,13 +3,18 @@ import { Route, Routes } from 'react-router';
 import Dashboard from './components/dashboard';
 import Footer from './components/footer';
 import Header from './components/header';
-import LoginForm from './components/login-form';
+import OAuthForm from './components/login/oauth-login-form';
 import SignUpForm from './components/signup-form';
+import TwoFactorLayout from './pages/2fa/layout';
+import TwoFactorLogin from './pages/2fa/login';
+import TwoFactorVerify from './pages/2fa/verify';
+import TwoFactorVerifyLayout from './pages/2fa/verify-layout';
 import Homepage from './pages/home';
 import OAuthLayout from './pages/oauth/layout';
-import OAuthForm from './pages/oauth/login-form';
 import SessionLayout from './pages/session/layout';
+import SessionLogin from './pages/session/login';
 import TokensLayout from './pages/tokens/layout';
+import TokenLogin from './pages/tokens/login';
 
 function App() {
   return (
@@ -24,7 +29,7 @@ function App() {
             </Route>
 
             <Route element={<TokensLayout mode="no-auth" />}>
-              <Route path="login" element={<LoginForm authRoute="token" />} />
+              <Route path="login" element={<TokenLogin />} />
               <Route path="signup" element={<SignUpForm authRoute="token" />} />
             </Route>
           </Route>
@@ -35,7 +40,7 @@ function App() {
             </Route>
 
             <Route element={<SessionLayout mode="no-auth" />}>
-              <Route path="login" element={<LoginForm authRoute="session" />} />
+              <Route path="login" element={<SessionLogin />} />
               <Route path="signup" element={<SignUpForm authRoute="session" />} />
             </Route>
           </Route>
@@ -47,6 +52,22 @@ function App() {
 
             <Route element={<OAuthLayout mode="no-auth" />}></Route>
             <Route path="login" element={<OAuthForm />} />
+          </Route>
+
+          <Route path="2fa">
+            <Route element={<TwoFactorLayout mode="auth" />}>
+              <Route index element={<Dashboard authRoute="2fa" />} />
+            </Route>
+
+            <Route element={<TwoFactorLayout mode="no-auth" />}>
+              <Route path="login" element={<TwoFactorLogin />} />
+
+              <Route element={<TwoFactorVerifyLayout />}>
+                <Route path="verify" element={<TwoFactorVerify />} />
+              </Route>
+
+              <Route path="signup" element={<SignUpForm authRoute="2fa" />} />
+            </Route>
           </Route>
 
           <Route path="/" element={<Homepage />} />

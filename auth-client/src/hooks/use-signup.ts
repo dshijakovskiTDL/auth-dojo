@@ -38,6 +38,11 @@ export const useSignup = (authRoute: AuthRoute) => {
     onSettled: (userData) => {
       if (!userData) return;
 
+      if (authRoute === '2fa') {
+        navigate(`/2fa/login`);
+        return;
+      }
+
       queryClient.setQueryData([authRoute, 'me'], userData);
       navigate(`/${authRoute}`);
     },

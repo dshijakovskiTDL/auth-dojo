@@ -17,7 +17,7 @@ button {
   @apply cursor-pointer transition-[scale] duration-150 active:scale-[0.97];
 
   &[data-oauth] {
-    @apply flex min-w-70 items-center justify-center gap-[1ch] rounded-sm px-4 py-2 ring ring-slate-900 hover:ring-2 focus-visible:ring-2;
+    @apply flex min-w-[40ch] items-center justify-center gap-[1ch] rounded-sm px-4 py-2 ring ring-slate-900 hover:ring-2 focus-visible:ring-2;
   }
 
   &:disabled {
@@ -26,7 +26,7 @@ button {
 }
 
 input {
-  @apply inline-block w-fit min-w-[40ch] rounded-md border border-cyan-900 p-2 text-inherit;
+  @apply inline-block w-full rounded-md border border-cyan-900 p-2 text-inherit;
 
   &:disabled {
     @apply pointer-events-none border-gray-300! bg-gray-200! placeholder:text-slate-600!;

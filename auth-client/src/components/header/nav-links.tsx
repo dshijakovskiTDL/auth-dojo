@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router';
 
+import { useTwoFactorUser } from '../../context/2fa-user';
 import { useOAuthUser } from '../../context/oauth-user';
 import { useSessionUser } from '../../context/session-user';
 import { useTokenUser } from '../../context/token-user';
@@ -9,6 +10,7 @@ const NavLinks = () => {
   const { user: tokenUser } = useTokenUser();
   const { user: sessionUser } = useSessionUser();
   const { user: oAuthUser } = useOAuthUser();
+  const { user: twoFactorUser } = useTwoFactorUser();
 
   const showLoggedInStatus = (authType: AuthType) => {
     if (authType === 'Token' && tokenUser) return true;
@@ -16,6 +18,8 @@ const NavLinks = () => {
     if (authType === 'Session' && sessionUser) return true;
 
     if (authType === 'OAuth' && oAuthUser) return true;
+
+    if (authType === '2FA' && twoFactorUser) return true;
 
     return false;
   };
@@ -25,7 +29,7 @@ const NavLinks = () => {
       {authTypes.map((aType) => (
         <li key={aType} className="relative">
           <NavLink
-            to={aType.toLowerCase()}
+            to={`/${aType.toLowerCase()}`}
             className="block rounded-sm px-4 py-1.5 ring ring-slate-900 outline-offset-3 outline-slate-900 transition-colors hover:bg-slate-900 hover:text-slate-200 focus-visible:bg-slate-900 focus-visible:text-slate-200"
           >
             {aType}

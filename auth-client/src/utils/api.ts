@@ -21,6 +21,15 @@ const ROUTES = {
     logout: '/oauth/logout',
     dashboard: '/oauth/dashboard',
   },
+
+  '2fa': {
+    me: '/2fa/me',
+    login: '/2fa/login',
+    verify: '/2fa/verify',
+    resend: '/2fa/resend',
+    logout: '/2fa/logout',
+    dashboard: '/2fa/dashboard',
+  },
 };
 
 export type AuthRoute = keyof typeof ROUTES;

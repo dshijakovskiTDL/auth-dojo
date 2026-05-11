@@ -3,7 +3,7 @@ import { createMiddleware } from 'hono/factory';
 import { vValidator } from '@hono/valibot-validator';
 
 import { database } from './db';
-import { verifyPassword } from './utils';
+import { verifyHash } from './utils';
 import { ValidationMiddleware } from '.';
 
 export type RegisterUser = v.InferInput<typeof registerSchema>;
@@ -19,7 +19,7 @@ const registerSchema = v.object({
 });
 
 const registerAuthModeSchema = v.object({
-  authMode: v.picklist(['token', 'session']),
+  authMode: v.picklist(['token', 'session', '2fa']),
 });
 
 const validateRegister = vValidator('json', registerSchema, (result, c) => {
@@ -55,7 +55,7 @@ const validateCredentials = createMiddleware<ValidationMiddleware>(async (c, nex
   }
 
   // 2. Check if password is correct
-  const validPassword = await verifyPassword(password, user.password!);
+  const validPassword = await verifyHash(password, user.password!);
 
   if (!validPassword) {
     return c.json({ error: 'Password is incorrect' }, 401);

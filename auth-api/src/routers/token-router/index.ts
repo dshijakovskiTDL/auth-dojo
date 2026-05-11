@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 
 import { middleware } from '../shared/middleware';
 
-import { validateTokens } from './middleware';
+import { tokenMiddleware } from './middleware';
 import { tokens } from './tokens';
 
 const router = new Hono();
@@ -21,11 +21,11 @@ router.post('/logout', async (c) => {
   return c.json({ ok: true });
 });
 
-router.get('/me', validateTokens, async (c) => {
+router.get('/me', tokenMiddleware.validateTokens, async (c) => {
   return c.json(c.get('user'));
 });
 
-router.get('/dashboard', validateTokens, (c) => {
+router.get('/dashboard', tokenMiddleware.validateTokens, (c) => {
   const user = c.get('user');
 
   return c.json({ data: `${user.email}: Dummy data`, user });

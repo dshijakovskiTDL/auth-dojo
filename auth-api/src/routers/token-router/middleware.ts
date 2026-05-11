@@ -4,7 +4,7 @@ import { tokenStore } from './store';
 import { tokens } from './tokens';
 import { ValidationMiddleware } from '../shared';
 
-export const validateTokens = createMiddleware<ValidationMiddleware>(async (c, next) => {
+const validateTokens = createMiddleware<ValidationMiddleware>(async (c, next) => {
   const aToken = tokens.accessToken(c);
 
   if (aToken) {
@@ -55,3 +55,7 @@ export const validateTokens = createMiddleware<ValidationMiddleware>(async (c, n
 
   return next();
 });
+
+export const tokenMiddleware = {
+  validateTokens,
+};

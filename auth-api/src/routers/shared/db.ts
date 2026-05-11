@@ -167,7 +167,7 @@ const registerOAuthUser = async <TMethod extends OAuthProvider>(
     return await registerGithubUser(userData as GithubUser);
   }
 
-  // TODO: Implement facebook, twitter, linkedin OAuth
+  // TODO: Implement Facebook, Twitter, Linkedin OAuth
 
   throw new Error('Invalid OAuth registration method');
 };

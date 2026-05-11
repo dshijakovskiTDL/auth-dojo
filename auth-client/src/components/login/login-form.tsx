@@ -1,16 +1,17 @@
 import { ElementRef, FormEvent, useRef } from 'react';
 import { Link } from 'react-router';
 
-import { useLogin } from '../hooks/use-login';
-import { AuthRoute } from '../utils/api';
+import { AuthRoute } from '../../utils/api';
+import LoginFormHeader from './form-header';
 
 type Props = {
   authRoute: AuthRoute;
+  loading: boolean;
+  error: Error | null;
+  login: (credentials: { email: string; password: string }) => void;
 };
 
-const LoginForm = ({ authRoute }: Props) => {
-  const { mutate, isPending, error } = useLogin(authRoute);
-
+const LoginForm = ({ authRoute, loading, error, login }: Props) => {
   const formRef = useRef<ElementRef<'form'> | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -22,17 +23,14 @@ const LoginForm = ({ authRoute }: Props) => {
     const email = data.get('email') as string;
     const password = data.get('pwd') as string;
 
-    mutate({ email, password });
+    login({ email, password });
   };
 
   return (
-    <div className="max-w-[60ch] space-y-10">
-      <h2 className="text-center text-2xl">
-        <span className="capitalize italic underline">{authRoute}</span> based
-        Authentication
-      </h2>
+    <div className="w-[40ch] space-y-8">
+      <LoginFormHeader authRoute={authRoute} />
 
-      <form ref={formRef} onSubmit={handleSubmit} className="grid w-fit gap-4">
+      <form ref={formRef} onSubmit={handleSubmit} className="grid w-full gap-4">
         <div className="control">
           <label htmlFor="email">Email</label>
           <input
@@ -40,7 +38,7 @@ const LoginForm = ({ authRoute }: Props) => {
             name="email"
             id="email"
             placeholder="Your email here"
-            disabled={isPending}
+            disabled={loading}
           />
         </div>
 
@@ -51,7 +49,7 @@ const LoginForm = ({ authRoute }: Props) => {
             name="pwd"
             id="password"
             placeholder="Your password here"
-            disabled={isPending}
+            disabled={loading}
           />
         </div>
 
@@ -62,7 +60,7 @@ const LoginForm = ({ authRoute }: Props) => {
           </Link>
         </p>
 
-        <button disabled={isPending} type="submit">
+        <button disabled={loading} type="submit">
           Log in
         </button>
 

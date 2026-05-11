@@ -1,4 +1,5 @@
-import { getApiUrl } from '../../../utils/api';
+import { getApiUrl } from '../../utils/api';
+import LoginFormHeader from './form-header';
 
 type OAuthProvider = 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin';
 
@@ -11,10 +12,8 @@ const OAuthForm = () => {
   };
 
   return (
-    <div className="max-w-[60ch] space-y-10">
-      <h2 className="text-center text-2xl">
-        <span className="capitalize italic underline">OAuth</span> based Authentication
-      </h2>
+    <div className="max-w-[40ch] space-y-10">
+      <LoginFormHeader authRoute="oauth" />
 
       <div className="space-y-5">
         <button type="button" data-oauth onClick={() => oAuthLogin('google')}>

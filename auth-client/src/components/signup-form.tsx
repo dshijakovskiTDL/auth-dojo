@@ -27,13 +27,13 @@ const SignUpForm = ({ authRoute }: Props) => {
   };
 
   return (
-    <div className="max-w-[60ch] space-y-10">
+    <div className="w-[40ch] space-y-8">
       <div className="text-center">
         <h2 className="text-center text-2xl">Welcome to Auth 🥷 Dojo!</h2>
         <p className="font-light">Create an account for free</p>
       </div>
 
-      <form ref={formRef} onSubmit={handleSubmit} className="grid w-fit gap-4">
+      <form ref={formRef} onSubmit={handleSubmit} className="grid w-full gap-4">
         <div className="control">
           <label htmlFor="name">Name</label>
           <input

@@ -10,13 +10,17 @@ export const tokenExpiry = (value: number, unit: DurationUnit) => {
 };
 
 export const hashValue = (value: string) => {
-  return Bun.hash(value);
+  return Bun.hash(value).toString();
 };
 
 export const hashPassword = (password: string) => {
   return Bun.password.hash(password, 'bcrypt');
 };
 
-export const verifyPassword = (password: string, hashedPassword: string) => {
-  return Bun.password.verify(password, hashedPassword, 'bcrypt');
+export const verifyHash = (value: string, hashedValue: string) => {
+  return Bun.password.verify(value, hashedValue, 'bcrypt');
+};
+
+export const generateOtpCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };

@@ -1,9 +1,19 @@
 import { Link, Route, Routes } from 'react-router';
 
+import { AuthRoute } from '../../utils/api';
+import TwoFactorLogout from './logout/2fa-logout';
 import OAuthLogout from './logout/oauth-logout';
 import SessionLogout from './logout/session-logout';
 import TokenLogout from './logout/token-logout';
 import NavLinks from './nav-links';
+
+const AUTH_TYPES: Array<{ path: AuthRoute; LogoutComponent: () => JSX.Element | null }> =
+  [
+    { path: 'token', LogoutComponent: TokenLogout },
+    { path: 'session', LogoutComponent: SessionLogout },
+    { path: 'oauth', LogoutComponent: OAuthLogout },
+    { path: '2fa', LogoutComponent: TwoFactorLogout },
+  ] as const;
 
 const Header = () => {
   return (
@@ -14,11 +24,12 @@ const Header = () => {
         </Link>
 
         <Routes>
-          <Route path="token/*" element={<TokenLogout />}></Route>
-
-          <Route path="session/*" element={<SessionLogout />}></Route>
-
-          <Route path="oauth/*" element={<OAuthLogout />}></Route>
+          {AUTH_TYPES.map(({ path, LogoutComponent }) => (
+            <Route key={path} path={`${path}/*`}>
+              <Route index element={<LogoutComponent />} />
+              <Route path="*" element={<NavLinks />} />
+            </Route>
+          ))}
 
           <Route path="*" element={<NavLinks />}></Route>
         </Routes>

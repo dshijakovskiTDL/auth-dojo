@@ -14,5 +14,7 @@ declare module 'bun' {
 
     TURSO_DB_URL: string;
     TURSO_DB_TOKEN: string;
+
+    RESEND_API_KEY: string;
   }
 }
