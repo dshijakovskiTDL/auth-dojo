@@ -1,36 +1,37 @@
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
+import { oAuth, OAuthModule } from '..';
+import { cookieOptions } from '../../../shared';
 
-import { oAuth, OAuthModule } from '.';
-import { cookieOptions } from '../../shared';
-
-export type GoogleUser = {
-  id: string;
-  email: string;
-  name: string;
-  given_name: string;
-  family_name: string;
-  picture: string;
+export type GithubUser = {
+  id: number;
+  email: string | null;
+  login: string;
+  name: string | null;
+  avatar_url: string;
 };
 
-const config = oAuth.createConfig('google', {
-  authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-  tokenUrl: 'https://oauth2.googleapis.com/token',
-  userDataUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+const config = oAuth.createConfig('github', {
+  authUrl: 'https://github.com/login/oauth/authorize',
+  tokenUrl: 'https://github.com/login/oauth/access_token',
+  userDataUrl: 'https://api.github.com/user',
+
+  emailsUrl: 'https://api.github.com/user/emails',
 });
 
-const googleAuthUrl = (codes: { state: string; codeChallenge: string }) => {
+const githubAuthUrl = (codes: { state: string; codeChallenge: string }) => {
   const { state, codeChallenge } = codes;
 
   const url = new URL(config.authUrl);
 
-  url.searchParams.set('client_id', Bun.env.GOOGLE_CLIENT_ID!);
+  url.searchParams.set('client_id', Bun.env.GITHUB_CLIENT_ID!);
   url.searchParams.set('redirect_uri', config.redirectUrl);
-  url.searchParams.set('response_type', 'code');
-  url.searchParams.set('scope', 'openid email profile');
+  url.searchParams.set('scope', 'user:email read:user');
 
   url.searchParams.set('state', state);
   url.searchParams.set('code_challenge', codeChallenge);
   url.searchParams.set('code_challenge_method', 'S256');
+
+  url.searchParams.set('prompt', 'select_account');
 
   return url.toString();
 };
@@ -40,15 +41,18 @@ const exchangeToken = async (codes: { code: string; codeVerifier: string }) => {
 
   const response = await fetch(config.tokenUrl, {
     method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({
       code,
       code_verifier: codeVerifier,
 
-      client_id: Bun.env.GOOGLE_CLIENT_ID,
-      client_secret: Bun.env.GOOGLE_CLIENT_SECRET,
+      client_id: Bun.env.GITHUB_CLIENT_ID,
+      client_secret: Bun.env.GITHUB_CLIENT_SECRET,
 
       redirect_uri: config.redirectUrl,
-      grant_type: 'authorization_code',
     }),
   });
 
@@ -58,18 +62,29 @@ const exchangeToken = async (codes: { code: string; codeVerifier: string }) => {
 };
 
 const getUserData = async (accessToken: string) => {
-  const response = await fetch(config.userDataUrl, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  const headers = new Headers();
+  headers.set('Authorization', `Bearer ${accessToken}`);
 
-  const userData = (await response.json()) as GoogleUser;
+  const response = await fetch(config.userDataUrl, { headers });
+
+  const userData = (await response.json()) as GithubUser;
+
+  if (!userData.email) {
+    const response = await fetch(config.emailsUrl, { headers });
+    const emails = (await response.json()) as Array<{
+      email: string;
+      primary: boolean;
+      verified: boolean;
+    }>;
+
+    const verifiedEmail = emails.find((email) => email.primary && email.verified);
+    userData.email = verifiedEmail?.email ?? null;
+  }
 
   return userData;
 };
 
-export const googleOAuth: OAuthModule<GoogleUser> = {
+export const githubOAuth: OAuthModule<GithubUser> = {
   login: async (c) => {
     // 1. Generate state, code verifier, code challenge
     const { state, codeChallenge, codeVerifier } = await oAuth.generateLoginCodes();
@@ -88,7 +103,7 @@ export const googleOAuth: OAuthModule<GoogleUser> = {
     });
 
     // 3. Construct auth url
-    return googleAuthUrl({ state, codeChallenge });
+    return githubAuthUrl({ state, codeChallenge });
   },
 
   loginCallback: async (c, { state, code }) => {

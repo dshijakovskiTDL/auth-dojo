@@ -1,12 +1,12 @@
 import { and, eq } from 'drizzle-orm';
 
+import { AuthUser } from '.';
 import { db } from '../../db';
 import { OAuthProvider, users } from '../../db/schema';
 import { hashPassword } from './utils';
-import { GoogleUser } from '../oauth-router/oauth/google';
 import { RegisterUser } from './middleware';
-import { AuthUser } from '.';
-import { GithubUser } from '../oauth-router/oauth/github';
+import { GoogleUser } from '../oauth-router/oauth/providers/google';
+import { GithubUser } from '../oauth-router/oauth/providers/github';
 
 const getCredentialsUserByEmail = async (email: string) => {
   const [userData] = await db
@@ -151,9 +151,13 @@ const registerGithubUser = async (userData: GithubUser) => {
   return user;
 };
 
-const registerOAuthUser = async <TMethod extends 'google' | 'github'>(
+const registerOAuthUser = async <TMethod extends OAuthProvider>(
   method: TMethod,
-  userData: TMethod extends 'google' ? GoogleUser : GithubUser,
+  userData: TMethod extends 'google'
+    ? GoogleUser
+    : TMethod extends 'github'
+      ? GithubUser
+      : unknown,
 ) => {
   if (method === 'google') {
     return await registerGoogleUser(userData as GoogleUser);
@@ -162,6 +166,8 @@ const registerOAuthUser = async <TMethod extends 'google' | 'github'>(
   if (method === 'github') {
     return await registerGithubUser(userData as GithubUser);
   }
+
+  // TODO: Implement facebook, twitter, linkedin OAuth
 
   throw new Error('Invalid OAuth registration method');
 };

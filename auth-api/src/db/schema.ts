@@ -13,7 +13,7 @@ export const users = sqliteTable('users', {
   authType: text().$type<'credentials' | 'oauth'>().notNull(), // 'credentials' | 'oauth'
 
   // OAuth only
-  provider: text().$type<'google' | 'github'>(), // 'google' | 'github' | null
+  provider: text().$type<'google' | 'github' | 'facebook' | 'twitter' | 'linkedin'>(), // 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | null
   providerId: text(), // provider's user ID | null
 });
 

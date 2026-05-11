@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 
 import { oAuthMiddleware } from './middleware';
-import { googleOAuth } from './oauth/google';
 import { oAuthStore } from './store';
-import { oAuth } from './oauth';
 import { database } from '../shared/db';
-import { githubOAuth } from './oauth/github';
+
+import { oAuth } from './oauth';
+import { googleOAuth } from './oauth/providers/google';
+import { githubOAuth } from './oauth/providers/github';
 
 const frontendUrl = Bun.env.FRONTEND_URL || 'http://localhost:5173';
 
@@ -23,6 +24,8 @@ router.get('/login', oAuthMiddleware.validateOAuthMethod, async (c) => {
   if (method === 'github') {
     authUrl = await githubOAuth.login(c);
   }
+
+  // TODO: Facebook, Twitter, Linkedin OAuth
 
   if (authUrl) {
     return c.redirect(authUrl);

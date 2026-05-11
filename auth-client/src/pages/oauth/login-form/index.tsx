@@ -1,7 +1,9 @@
 import { getApiUrl } from '../../../utils/api';
 
+type OAuthProvider = 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin';
+
 const OAuthForm = () => {
-  const oAuthLogin = (method: 'google' | 'github') => {
+  const oAuthLogin = (method: OAuthProvider) => {
     const apiUrl = new URL(getApiUrl('oauth', 'login'));
     apiUrl.searchParams.set('method', method);
 
@@ -53,6 +55,49 @@ const OAuthForm = () => {
                 </g>
               </g>
             </g>
+          </svg>
+        </button>
+
+        <button type="button" data-oauth disabled onClick={() => oAuthLogin('facebook')}>
+          <span>Login with Facebook</span>
+          <svg aria-hidden="true" className="size-6" viewBox="0 0 16 16" fill="none">
+            <path
+              fill="#1877F2"
+              d="M15 8a7 7 0 00-7-7 7 7 0 00-1.094 13.915v-4.892H5.13V8h1.777V6.458c0-1.754 1.045-2.724 2.644-2.724.766 0 1.567.137 1.567.137v1.723h-.883c-.87 0-1.14.54-1.14 1.093V8h1.941l-.31 2.023H9.094v4.892A7.001 7.001 0 0015 8z"
+            />
+            <path
+              fill="#ffffff"
+              d="M10.725 10.023L11.035 8H9.094V6.687c0-.553.27-1.093 1.14-1.093h.883V3.87s-.801-.137-1.567-.137c-1.6 0-2.644.97-2.644 2.724V8H5.13v2.023h1.777v4.892a7.037 7.037 0 002.188 0v-4.892h1.63z"
+            />
+          </svg>
+        </button>
+
+        <button type="button" data-oauth disabled onClick={() => oAuthLogin('twitter')}>
+          <span>Login with Twitter</span>
+          <svg aria-hidden="true" className="size-7" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="20" fill="#1DA1F2" />
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M36 16.3086C35.1177 16.7006 34.1681 16.9646 33.1722 17.0838C34.1889 16.4742 34.9697 15.5095 35.3368 14.36C34.3865 14.9247 33.3314 15.3335 32.2107 15.5551C31.3123 14.5984 30.0316 14 28.6165 14C25.8975 14 23.6928 16.2047 23.6928 18.9237C23.6928 19.3092 23.7368 19.6852 23.8208 20.046C19.7283 19.8412 16.1005 17.8805 13.6719 14.9015C13.2479 15.6287 13.0055 16.4742 13.0055 17.3766C13.0055 19.0845 13.8735 20.5916 15.1958 21.4747C14.3878 21.4491 13.6295 21.2275 12.9647 20.8587V20.9203C12.9647 23.3066 14.663 25.296 16.9141 25.7496C16.5013 25.8616 16.0661 25.9224 15.6174 25.9224C15.2998 25.9224 14.991 25.8912 14.6902 25.8336C15.3166 27.7895 17.1357 29.2134 19.2899 29.2534C17.6052 30.5733 15.4822 31.3612 13.1751 31.3612C12.7767 31.3612 12.3848 31.338 12 31.2916C14.1791 32.6884 16.7669 33.5043 19.5475 33.5043C28.6037 33.5043 33.5562 26.0016 33.5562 19.4956C33.5562 19.282 33.5522 19.0693 33.5418 18.8589C34.5049 18.1629 35.34 17.2958 36 16.3086Z"
+              fill="white"
+            />
+          </svg>
+        </button>
+
+        <button type="button" data-oauth disabled onClick={() => oAuthLogin('linkedin')}>
+          <span>Login with Linkedin</span>
+          <svg aria-hidden="true" className="size-6" viewBox="0 0 32 32" fill="none">
+            <rect x="2" y="2" width="28" height="28" rx="14" fill="#1275B1" />
+            <path
+              d="M12.6186 9.69215C12.6186 10.6267 11.8085 11.3843 10.8093 11.3843C9.81004 11.3843 9 10.6267 9 9.69215C9 8.7576 9.81004 8 10.8093 8C11.8085 8 12.6186 8.7576 12.6186 9.69215Z"
+              fill="white"
+            />
+            <path d="M9.24742 12.6281H12.3402V22H9.24742V12.6281Z" fill="white" />
+            <path
+              d="M17.3196 12.6281H14.2268V22H17.3196C17.3196 22 17.3196 19.0496 17.3196 17.2049C17.3196 16.0976 17.6977 14.9855 19.2062 14.9855C20.911 14.9855 20.9008 16.4345 20.8928 17.5571C20.8824 19.0244 20.9072 20.5219 20.9072 22H24V17.0537C23.9738 13.8954 23.1508 12.4401 20.4433 12.4401C18.8354 12.4401 17.8387 13.1701 17.3196 13.8305V12.6281Z"
+              fill="white"
+            />
           </svg>
         </button>
       </div>
