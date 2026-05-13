@@ -28,10 +28,10 @@ let env: v.InferInput<typeof EnvSchema>;
 try {
   env = v.parse(EnvSchema, Bun.env);
 } catch (e) {
-  console.log('Invalid environment variables');
-  console.log(e);
+  console.error('Invalid environment variables');
+  console.error(e);
 
-  process.exit(0);
+  process.exit(1);
 }
 
 export { env };
