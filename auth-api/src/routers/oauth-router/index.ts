@@ -2,70 +2,69 @@ import { Hono } from 'hono';
 
 import { oAuthMiddleware } from './middleware';
 import { oAuthStore } from './store';
-import { database } from '../shared/db';
 
 import { oAuth } from './oauth';
 import { googleOAuth } from './oauth/providers/google';
 import { githubOAuth } from './oauth/providers/github';
-
-const frontendUrl = Bun.env.FRONTEND_URL || 'http://localhost:5173';
+import { env } from '../../env';
 
 const router = new Hono();
 
 router.get('/login', oAuthMiddleware.validateOAuthMethod, async (c) => {
   const { method } = c.req.valid('query');
 
-  let authUrl: string | null = null;
+  try {
+    let authUrl: string | null = null;
 
-  if (method === 'google') {
-    authUrl = await googleOAuth.login(c);
+    if (method === 'google') {
+      authUrl = await googleOAuth.login(c);
+    }
+
+    if (method === 'github') {
+      authUrl = await githubOAuth.login(c);
+    }
+
+    // TODO: Facebook, Twitter, Linkedin OAuth
+
+    if (authUrl) {
+      return c.redirect(authUrl);
+    }
+  } catch (e) {
+    console.error(e);
+    return c.json({ error: 'Failed to login!' }, 500);
   }
 
-  if (method === 'github') {
-    authUrl = await githubOAuth.login(c);
-  }
+  console.error(`Auth URL not specified!, invalid OAuth method: ${method}`);
 
-  // TODO: Facebook, Twitter, Linkedin OAuth
-
-  if (authUrl) {
-    return c.redirect(authUrl);
-  }
-
-  throw new Error('Auth URL not specified!');
+  return c.json({ error: 'Failed to login!' }, 500);
 });
 
 router.get('/google/callback', oAuthMiddleware.validateCallback, async (c) => {
-  const params = c.req.valid('query');
+  const params = c.get('query');
 
-  const userData = await googleOAuth.loginCallback(c, params);
+  try {
+    const userData = await googleOAuth.loginCallback(c, params);
+    await oAuth.handleCallback(c, 'google', userData);
 
-  // Add user to mock DB if not already there
-  const user = await database.registerOAuthUser('google', userData);
-
-  // Create session
-  const sessionId = oAuth.createSession(c);
-
-  // Add session to Redis store
-  await oAuthStore.addSession(sessionId, user.providerId!);
-
-  return c.redirect(`${frontendUrl}/oauth`);
+    return c.redirect(`${env.FRONTEND_URL}/oauth`);
+  } catch (e) {
+    console.error(e);
+    return c.redirect(oAuth.callbackErrorUrl('google', (e as Error).message));
+  }
 });
 
 router.get('/github/callback', oAuthMiddleware.validateCallback, async (c) => {
-  const params = c.req.valid('query');
+  const params = c.get('query');
 
-  const userData = await githubOAuth.loginCallback(c, params);
+  try {
+    const userData = await githubOAuth.loginCallback(c, params);
+    await oAuth.handleCallback(c, 'github', userData);
 
-  // Add user to mock DB if not already there
-  const user = await database.registerOAuthUser('github', userData);
-
-  // Create session
-  const sessionId = oAuth.createSession(c);
-
-  // Add session to Redis store
-  await oAuthStore.addSession(sessionId, user.providerId!);
-
-  return c.redirect(`${frontendUrl}/oauth`);
+    return c.redirect(`${env.FRONTEND_URL}/oauth`);
+  } catch (e) {
+    console.error(e);
+    return c.redirect(oAuth.callbackErrorUrl('github', (e as Error).message));
+  }
 });
 
 router.post('/logout', async (c) => {

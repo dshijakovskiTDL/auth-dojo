@@ -1,9 +1,15 @@
+import { useSearchParams } from 'react-router';
+
 import { getApiUrl } from '../../utils/api';
 import LoginFormHeader from './form-header';
 
 type OAuthProvider = 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin';
 
 const OAuthForm = () => {
+  const [searchParams] = useSearchParams();
+  const error = decodeURIComponent(searchParams.get('error') || '');
+  const method = decodeURIComponent(searchParams.get('method') || '');
+
   const oAuthLogin = (method: OAuthProvider) => {
     const apiUrl = new URL(getApiUrl('oauth', 'login'));
     apiUrl.searchParams.set('method', method);
@@ -14,6 +20,12 @@ const OAuthForm = () => {
   return (
     <div className="max-w-[40ch] space-y-10">
       <LoginFormHeader authRoute="oauth" />
+
+      {error && (
+        <p className="text-center font-medium text-red-600">
+          <span className="capitalize">{method}</span> OAuth: {error}
+        </p>
+      )}
 
       <div className="space-y-5">
         <button type="button" data-oauth onClick={() => oAuthLogin('google')}>

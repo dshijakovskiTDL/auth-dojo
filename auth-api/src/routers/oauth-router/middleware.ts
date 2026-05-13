@@ -1,10 +1,11 @@
+import * as v from 'valibot';
 import { vValidator } from '@hono/valibot-validator';
 import { createMiddleware } from 'hono/factory';
-import { InferInput, object, picklist, string } from 'valibot';
 
 import { oAuth } from './oauth';
 import { oAuthStore } from './store';
 import { ValidationMiddleware } from '../shared';
+import { OAuthProvider } from '../../db/schema';
 
 const validateOAuthSession = createMiddleware<ValidationMiddleware>(async (c, next) => {
   const sessionId = oAuth.getSessionCookie(c);
@@ -29,23 +30,48 @@ const validateOAuthSession = createMiddleware<ValidationMiddleware>(async (c, ne
 
 const validateOAuthMethod = vValidator(
   'query',
-  object({
-    method: picklist(['google', 'github']),
+  v.object({
+    method: v.picklist(['google', 'github']),
   }),
   (result, c) => {
     if (!result.success) {
-      return c.json({ error: 'Invalid OAuth method!' }, 401);
+      return c.json({ error: 'Invalid OAuth method!' }, 400);
     }
   },
 );
 
-const callbackSchema = object({ code: string(), state: string() });
-
-const validateCallback = vValidator('query', callbackSchema, (result, c) => {
-  if (!result.success) {
-    return c.json({ error: 'Invalid callback schema!' }, 400);
-  }
+const callbackSuccessSchema = v.object({ code: v.string(), state: v.string() });
+const callbackErrorSchema = v.object({
+  error: v.string(),
+  error_description: v.optional(v.string()),
 });
+
+const callbackSchema = v.union([callbackSuccessSchema, callbackErrorSchema]);
+
+export type OAuthCallbackSuccess = v.InferInput<typeof callbackSuccessSchema>;
+
+const validateCallback = createMiddleware<{ Variables: { query: OAuthCallbackSuccess } }>(
+  async (c, next) => {
+    const result = v.safeParse(callbackSchema, c.req.query());
+    const provider = c.req.path.split('/')[2] as OAuthProvider;
+
+    if (!result.success) {
+      return c.redirect(
+        oAuth.callbackErrorUrl(provider, 'Invalid OAuth callback schema'),
+      );
+    }
+
+    if ('error' in result.output) {
+      console.error(result.output);
+
+      return c.redirect(oAuth.callbackErrorUrl(provider, result.output.error));
+    }
+
+    c.set('query', result.output);
+
+    await next();
+  },
+);
 
 export const oAuthMiddleware = {
   validateOAuthSession,
@@ -53,5 +79,3 @@ export const oAuthMiddleware = {
 
   validateCallback,
 };
-
-export type CallbackSchema = InferInput<typeof callbackSchema>;

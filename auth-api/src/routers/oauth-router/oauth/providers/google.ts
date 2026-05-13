@@ -2,6 +2,7 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 
 import { oAuth, OAuthModule } from '..';
 import { cookieOptions } from '../../../shared';
+import { env } from '../../../../env';
 
 export type GoogleUser = {
   id: string;
@@ -23,7 +24,7 @@ const googleAuthUrl = (codes: { state: string; codeChallenge: string }) => {
 
   const url = new URL(config.authUrl);
 
-  url.searchParams.set('client_id', Bun.env.GOOGLE_CLIENT_ID!);
+  url.searchParams.set('client_id', env.GOOGLE_CLIENT_ID);
   url.searchParams.set('redirect_uri', config.redirectUrl);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('scope', 'openid email profile');
@@ -44,13 +45,18 @@ const exchangeToken = async (codes: { code: string; codeVerifier: string }) => {
       code,
       code_verifier: codeVerifier,
 
-      client_id: Bun.env.GOOGLE_CLIENT_ID,
-      client_secret: Bun.env.GOOGLE_CLIENT_SECRET,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
 
       redirect_uri: config.redirectUrl,
       grant_type: 'authorization_code',
     }),
   });
+
+  if (!response.ok) {
+    console.error(await response.text());
+    throw new Error('Failed to exchange token!');
+  }
 
   const tokenData = (await response.json()) as { access_token: string };
 
@@ -63,6 +69,11 @@ const getUserData = async (accessToken: string) => {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+
+  if (!response.ok) {
+    console.error(await response.text());
+    throw new Error('Failed to get user data!');
+  }
 
   const userData = (await response.json()) as GoogleUser;
 
@@ -92,14 +103,20 @@ export const googleOAuth: OAuthModule<GoogleUser> = {
   },
 
   loginCallback: async (c, { state, code }) => {
-    const serverState = getCookie(c, config.cookies.state)!;
+    const serverState = getCookie(c, config.cookies.state);
+    if (!serverState) {
+      throw new Error('State cookie is missing!');
+    }
 
     // 1. CSRF protection - state mismatch check
     if (serverState !== state) {
       throw new Error('State mismatch!');
     }
 
-    const codeVerifier = getCookie(c, config.cookies.codeVerifier)!;
+    const codeVerifier = getCookie(c, config.cookies.codeVerifier);
+    if (!codeVerifier) {
+      throw new Error('Code verifier cookie is missing!');
+    }
 
     // 2. Clear cookies - invalidate state for multiple usage
     deleteCookie(c, config.cookies.state);

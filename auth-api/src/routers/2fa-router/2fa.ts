@@ -74,7 +74,11 @@ const resendCode = async (c: Context, preAuthToken: string, userId: string) => {
     clearPreAuth(c, preAuthToken),
   ]);
 
-  await prepareLogin(c, userData);
+  if (!userData) {
+    throw new Error('User not found');
+  }
+
+  await prepareLogin(c, database.toAuthUser(userData));
 };
 
 const verifyLogin = async (c: Context, code: string) => {

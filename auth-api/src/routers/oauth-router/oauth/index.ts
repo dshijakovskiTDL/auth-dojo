@@ -5,9 +5,10 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { durationSeconds } from '../../shared/utils';
 import { cookieOptions } from '../../shared';
 import { OAuthProvider } from '../../../db/schema';
-import { CallbackSchema } from '../middleware';
-
-const apiUrl = Bun.env.API_URL || 'http://localhost:3000';
+import { OAuthCallbackSuccess } from '../middleware';
+import { database } from '../../shared/db';
+import { oAuthStore } from '../store';
+import { env } from '../../../env';
 
 const SESSION_COOKIE = 'auth-dojo-oauth-session';
 
@@ -16,7 +17,7 @@ const generateRandomState = () => {
 };
 
 const base64url = (arr: Uint8Array) => {
-  return btoa(String.fromCharCode(...arr))
+  return btoa(String.fromCharCode(...Array.from(arr)))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');
@@ -61,6 +62,34 @@ const createSession = (c: Context) => {
   return sessionId;
 };
 
+const handleCallback = async <T>(c: Context, provider: OAuthProvider, userData: T) => {
+  // Add user to mock DB if not already there
+  const user = await database.registerOAuthUser(provider, userData);
+  if (!user.providerId) {
+    throw new Error('User provider ID is missing');
+  }
+
+  // Create session
+  const sessionId = oAuth.createSession(c);
+
+  // Add session to Redis store
+  await oAuthStore.addSession(sessionId, user.providerId);
+};
+
+const callbackErrorUrl = (
+  provider: OAuthProvider,
+  error: string = 'OAuth callback failed!',
+) => {
+  let cleanedError = error.replace(/_/g, ' ');
+  cleanedError = cleanedError.charAt(0).toUpperCase() + cleanedError.slice(1);
+
+  const errorUrl = new URL(`${env.FRONTEND_URL}/oauth/login`);
+  errorUrl.searchParams.set('method', provider);
+  errorUrl.searchParams.set('error', cleanedError);
+
+  return errorUrl.toString();
+};
+
 type ConfigUrl<T extends Record<string, string>> = {
   authUrl: string;
   tokenUrl: string;
@@ -72,7 +101,7 @@ const createConfig = <T extends Record<string, string>>(
 ) => ({
   ...urls,
 
-  redirectUrl: `${apiUrl}/oauth/${provider}/callback`,
+  redirectUrl: `${env.API_URL}/oauth/${provider}/callback`,
 
   cookies: {
     state: `auth-dojo-${provider}-state`,
@@ -82,7 +111,7 @@ const createConfig = <T extends Record<string, string>>(
 
 export type OAuthModule<T = unknown> = {
   login: (c: Context) => Promise<string>;
-  loginCallback: (c: Context, callbackSchema: CallbackSchema) => Promise<T>;
+  loginCallback: (c: Context, callbackSchema: OAuthCallbackSuccess) => Promise<T>;
 };
 
 export const oAuth = {
@@ -92,6 +121,9 @@ export const oAuth = {
   getSessionCookie,
   deleteSessionCookie,
   createSession,
+
+  handleCallback,
+  callbackErrorUrl,
 
   createConfig,
 };

@@ -1,4 +1,9 @@
+# Editor directories and files
 .vscode
 .cursor
 
+# Environment variables
 .env
+
+# System files
+.DS_Store

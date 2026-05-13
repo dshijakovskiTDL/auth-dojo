@@ -36,7 +36,8 @@ export const removeSession = async (sessionId: string) => {
 };
 
 const preAuthKey = (preAuthToken: string) => {
-  return `${PRE_AUTH_PREFIX}${preAuthToken}`;
+  const hashedPreAuthToken = hashValue(preAuthToken);
+  return `${PRE_AUTH_PREFIX}${hashedPreAuthToken}`;
 };
 
 type PreAuthEntry = { userId: string; hashedOtpCode: string };

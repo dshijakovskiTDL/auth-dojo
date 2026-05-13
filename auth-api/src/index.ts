@@ -11,12 +11,11 @@ import { database } from './routers/shared/db';
 import { tokens } from './routers/token-router/tokens';
 import { sessions } from './routers/session-router/sessions';
 import { twoFactorRouter } from './routers/2fa-router';
-
-const frontendUrl = Bun.env.FRONTEND_URL || 'http://localhost:5173';
+import { env } from './env';
 
 const app = new Hono();
 
-app.use(cors({ origin: [frontendUrl], credentials: true }));
+app.use(cors({ origin: [env.FRONTEND_URL], credentials: true }));
 
 app.post(
   '/signup',

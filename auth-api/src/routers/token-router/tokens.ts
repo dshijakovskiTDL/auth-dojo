@@ -8,8 +8,8 @@ import { randomUUIDv7 } from 'bun';
 import { durationSeconds, tokenExpiry } from '../shared/utils';
 import { AccessToken, tokenStore } from './store';
 import { AuthUser, cookieOptions } from '../shared';
+import { env } from '../../env';
 
-const jwtSecret = Bun.env.JWT_SECRET || randomBytes(32).toString('hex');
 const jwtAlgo: SignatureAlgorithm = 'HS256';
 
 const ACCESS_TOKEN = 'auth-dojo-access-token';
@@ -24,7 +24,7 @@ const refreshToken = (c: Context) => {
 };
 
 const verifyAccessToken = async (accessToken: string) => {
-  return (await verify(accessToken, jwtSecret, jwtAlgo)) as AccessToken;
+  return (await verify(accessToken, env.JWT_SECRET, jwtAlgo)) as AccessToken;
 };
 
 const generateTokens = async (user: AuthUser) => {
@@ -34,7 +34,7 @@ const generateTokens = async (user: AuthUser) => {
     jti: randomUUIDv7(),
   };
 
-  const accessToken = await sign(payload, jwtSecret, jwtAlgo);
+  const accessToken = await sign(payload, env.JWT_SECRET, jwtAlgo);
   const refreshToken = randomBytes(32).toString('hex');
 
   return { accessToken, refreshToken };

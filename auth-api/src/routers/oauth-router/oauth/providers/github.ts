@@ -1,6 +1,7 @@
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { oAuth, OAuthModule } from '..';
 import { cookieOptions } from '../../../shared';
+import { env } from '../../../../env';
 
 export type GithubUser = {
   id: number;
@@ -23,7 +24,7 @@ const githubAuthUrl = (codes: { state: string; codeChallenge: string }) => {
 
   const url = new URL(config.authUrl);
 
-  url.searchParams.set('client_id', Bun.env.GITHUB_CLIENT_ID!);
+  url.searchParams.set('client_id', env.GITHUB_CLIENT_ID);
   url.searchParams.set('redirect_uri', config.redirectUrl);
   url.searchParams.set('scope', 'user:email read:user');
 
@@ -49,12 +50,17 @@ const exchangeToken = async (codes: { code: string; codeVerifier: string }) => {
       code,
       code_verifier: codeVerifier,
 
-      client_id: Bun.env.GITHUB_CLIENT_ID,
-      client_secret: Bun.env.GITHUB_CLIENT_SECRET,
+      client_id: env.GITHUB_CLIENT_ID,
+      client_secret: env.GITHUB_CLIENT_SECRET,
 
       redirect_uri: config.redirectUrl,
     }),
   });
+
+  if (!response.ok) {
+    console.error(await response.text());
+    throw new Error('Failed to exchange token!');
+  }
 
   const tokenData = (await response.json()) as { access_token: string };
 
@@ -67,10 +73,21 @@ const getUserData = async (accessToken: string) => {
 
   const response = await fetch(config.userDataUrl, { headers });
 
+  if (!response.ok) {
+    console.error(await response.text());
+    throw new Error('Failed to get user data!');
+  }
+
   const userData = (await response.json()) as GithubUser;
 
   if (!userData.email) {
     const response = await fetch(config.emailsUrl, { headers });
+
+    if (!response.ok) {
+      console.error(await response.text());
+      throw new Error('Failed to get user email!');
+    }
+
     const emails = (await response.json()) as Array<{
       email: string;
       primary: boolean;
@@ -107,14 +124,20 @@ export const githubOAuth: OAuthModule<GithubUser> = {
   },
 
   loginCallback: async (c, { state, code }) => {
-    const serverState = getCookie(c, config.cookies.state)!;
+    const serverState = getCookie(c, config.cookies.state);
+    if (!serverState) {
+      throw new Error('State cookie is missing!');
+    }
 
     // 1. CSRF protection - state mismatch check
     if (serverState !== state) {
       throw new Error('State mismatch!');
     }
 
-    const codeVerifier = getCookie(c, config.cookies.codeVerifier)!;
+    const codeVerifier = getCookie(c, config.cookies.codeVerifier);
+    if (!codeVerifier) {
+      throw new Error('Code verifier cookie is missing!');
+    }
 
     // 2. Clear cookies - invalidate state for multiple usage
     deleteCookie(c, config.cookies.state);

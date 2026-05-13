@@ -1,8 +1,10 @@
 import { drizzle } from 'drizzle-orm/libsql';
 
+import { env } from '../env';
+
 export const db = drizzle({
   connection: {
-    url: Bun.env.TURSO_DB_URL,
-    authToken: Bun.env.TURSO_DB_TOKEN,
+    url: env.TURSO_DB_URL,
+    authToken: env.TURSO_DB_TOKEN,
   },
 });

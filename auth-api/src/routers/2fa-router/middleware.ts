@@ -8,7 +8,7 @@ import { ValidationMiddleware } from '../shared';
 
 const validateCodeVerifier = vValidator(
   'json',
-  v.object({ code: v.pipe(v.string(), v.length(6), v.regex(/[0-9]/)) }),
+  v.object({ code: v.pipe(v.string(), v.length(6), v.digits()) }),
   (result, c) => {
     if (!result.success) {
       return c.json({ error: 'Invalid request' }, 400);

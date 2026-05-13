@@ -13,7 +13,7 @@ const loadTemplate = async (name: string, replacements: Record<string, string>) 
   let html = templateCache.get(name)!;
 
   for (const [key, value] of Object.entries(replacements)) {
-    html = html.replaceAll(`{{${key}}}`, value);
+    html = html.replace(new RegExp(`{{${key}}}`, 'g'), value);
   }
 
   return html;
@@ -30,7 +30,7 @@ const sendCodeVerification = async (code: string, user: AuthUser) => {
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: user.email,
-    subject: `Your verification code is ${formattedCode}`,
+    subject: `Here's your verification code 🥷`,
     html,
   });
 
