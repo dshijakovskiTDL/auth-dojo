@@ -1,6 +1,8 @@
+import { randomBytes } from 'node:crypto';
 import { Context } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
-import { randomBytes } from 'node:crypto';
+import { CookieOptions } from 'hono/utils/cookie';
+
 import { AuthUser, cookieOptions } from '../shared';
 import {
   durationSeconds,
@@ -13,7 +15,18 @@ import { database } from '../shared/db';
 import { twoFactorEmail } from './email';
 
 const SESSION_COOKIE = 'auth-dojo-2fa-session-id';
+
+const sessionCookieOptions = (): CookieOptions => ({
+  ...cookieOptions,
+  maxAge: durationSeconds(1, 'days'),
+});
+
 const PRE_AUTH_COOKIE = 'auth-dojo-2fa-pre-auth';
+
+const preAuthCookieOptions = (): CookieOptions => ({
+  ...cookieOptions,
+  maxAge: durationSeconds(10, 'minutes'),
+});
 
 const generateSessionId = () => {
   return randomBytes(32).toString('hex');
@@ -24,14 +37,11 @@ const getSessionCookie = (c: Context) => {
 };
 
 const setSessionCookie = (c: Context, sessionId: string) => {
-  setCookie(c, SESSION_COOKIE, sessionId, {
-    ...cookieOptions,
-    maxAge: durationSeconds(1, 'days'),
-  });
+  setCookie(c, SESSION_COOKIE, sessionId, sessionCookieOptions());
 };
 
 const deleteSessionCookie = (c: Context) => {
-  deleteCookie(c, SESSION_COOKIE);
+  deleteCookie(c, SESSION_COOKIE, sessionCookieOptions());
 };
 
 const prepareLogin = async (c: Context, user: AuthUser) => {
@@ -39,10 +49,7 @@ const prepareLogin = async (c: Context, user: AuthUser) => {
   const otpCode = generateOtpCode();
   const hashedOtpCode = await hashPassword(otpCode);
 
-  setCookie(c, PRE_AUTH_COOKIE, preAuthToken, {
-    ...cookieOptions,
-    maxAge: durationSeconds(10, 'minutes'),
-  });
+  setCookie(c, PRE_AUTH_COOKIE, preAuthToken, preAuthCookieOptions());
 
   await Promise.all([
     await twoFactorStore.addPreAuth(preAuthToken, {
@@ -54,7 +61,7 @@ const prepareLogin = async (c: Context, user: AuthUser) => {
 };
 
 const clearPreAuth = async (c: Context, preAuthToken: string) => {
-  deleteCookie(c, PRE_AUTH_COOKIE);
+  deleteCookie(c, PRE_AUTH_COOKIE, preAuthCookieOptions());
   await twoFactorStore.removePreAuth(preAuthToken);
 };
 

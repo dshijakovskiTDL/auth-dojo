@@ -1,7 +1,6 @@
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 
 import { oAuth, OAuthModule } from '..';
-import { cookieOptions } from '../../../shared';
 import { env } from '../../../../env';
 
 export type GoogleUser = {
@@ -86,17 +85,14 @@ export const googleOAuth: OAuthModule<GoogleUser> = {
     const { state, codeChallenge, codeVerifier } = await oAuth.generateLoginCodes();
 
     // 2. Set cookies for state and code verifier
-    setCookie(c, config.cookies.state, state, {
-      ...cookieOptions,
-      sameSite: 'lax',
-      maxAge: 5 * 60, // 5 minutes
-    });
+    setCookie(c, config.cookies.state, state, oAuth.stateCookieOptions());
 
-    setCookie(c, config.cookies.codeVerifier, codeVerifier, {
-      ...cookieOptions,
-      sameSite: 'lax',
-      maxAge: 5 * 60, // 5 minutes
-    });
+    setCookie(
+      c,
+      config.cookies.codeVerifier,
+      codeVerifier,
+      oAuth.codeVerifierCookieOptions(),
+    );
 
     // 3. Construct auth url
     return googleAuthUrl({ state, codeChallenge });
@@ -119,8 +115,8 @@ export const googleOAuth: OAuthModule<GoogleUser> = {
     }
 
     // 2. Clear cookies - invalidate state for multiple usage
-    deleteCookie(c, config.cookies.state);
-    deleteCookie(c, config.cookies.codeVerifier);
+    deleteCookie(c, config.cookies.state, oAuth.stateCookieOptions());
+    deleteCookie(c, config.cookies.codeVerifier, oAuth.codeVerifierCookieOptions());
 
     // 3. Exchange code for token
     const tokenData = await exchangeToken({ code, codeVerifier });

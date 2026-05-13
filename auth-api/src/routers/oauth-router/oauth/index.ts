@@ -1,6 +1,7 @@
 import { Context } from 'hono';
 import { randomBytes } from 'node:crypto';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
+import { CookieOptions } from 'hono/utils/cookie';
 
 import { durationSeconds } from '../../shared/utils';
 import { cookieOptions } from '../../shared';
@@ -11,6 +12,23 @@ import { oAuthStore } from '../store';
 import { env } from '../../../env';
 
 const SESSION_COOKIE = 'auth-dojo-oauth-session';
+
+const stateCookieOptions = (): CookieOptions => ({
+  ...cookieOptions,
+  sameSite: 'lax',
+  maxAge: durationSeconds(5, 'minutes'),
+});
+
+const codeVerifierCookieOptions = (): CookieOptions => ({
+  ...cookieOptions,
+  sameSite: 'lax',
+  maxAge: durationSeconds(5, 'minutes'),
+});
+
+const sessionCookieOptions = (): CookieOptions => ({
+  ...cookieOptions,
+  maxAge: durationSeconds(1, 'days'),
+});
 
 const generateRandomState = () => {
   return crypto.randomUUID();
@@ -48,16 +66,13 @@ const getSessionCookie = (c: Context) => {
 };
 
 const deleteSessionCookie = (c: Context) => {
-  deleteCookie(c, SESSION_COOKIE);
+  deleteCookie(c, SESSION_COOKIE, sessionCookieOptions());
 };
 
 const createSession = (c: Context) => {
   const sessionId = randomBytes(32).toString('hex');
 
-  setCookie(c, SESSION_COOKIE, sessionId, {
-    ...cookieOptions,
-    maxAge: durationSeconds(1, 'days'),
-  });
+  setCookie(c, SESSION_COOKIE, sessionId, sessionCookieOptions());
 
   return sessionId;
 };
@@ -126,4 +141,6 @@ export const oAuth = {
   callbackErrorUrl,
 
   createConfig,
+  stateCookieOptions,
+  codeVerifierCookieOptions,
 };

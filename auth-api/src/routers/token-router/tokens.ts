@@ -1,18 +1,33 @@
+import { randomUUIDv7 } from 'bun';
+import { randomBytes } from 'node:crypto';
 import { Context } from 'hono';
 import { sign, verify } from 'hono/jwt';
-import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
+import { CookieOptions } from 'hono/utils/cookie';
 import { SignatureAlgorithm } from 'hono/utils/jwt/jwa';
-import { randomBytes } from 'node:crypto';
-import { randomUUIDv7 } from 'bun';
+import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 
 import { durationSeconds, tokenExpiry } from '../shared/utils';
 import { AccessToken, tokenStore } from './store';
 import { AuthUser, cookieOptions } from '../shared';
 import { env } from '../../env';
 
-const jwtAlgo: SignatureAlgorithm = 'HS256';
+const JWT_ALGO: SignatureAlgorithm = 'HS256';
 
 const ACCESS_TOKEN = 'auth-dojo-access-token';
+
+// Centralized expiration time for Access Token (both JWT and Cookie)
+const ACCESS_TOKEN_DURATION_PARAMS: Parameters<typeof durationSeconds> = [15, 'minutes'];
+
+const accessTokenCookieOptions = (): CookieOptions => ({
+  ...cookieOptions,
+  maxAge: durationSeconds(...ACCESS_TOKEN_DURATION_PARAMS),
+});
+
+const refreshTokenCookieOptions = (): CookieOptions => ({
+  ...cookieOptions,
+  maxAge: durationSeconds(1, 'days'),
+});
+
 const REFRESH_TOKEN = 'auth-dojo-refresh-token';
 
 const accessToken = (c: Context) => {
@@ -24,17 +39,17 @@ const refreshToken = (c: Context) => {
 };
 
 const verifyAccessToken = async (accessToken: string) => {
-  return (await verify(accessToken, env.JWT_SECRET, jwtAlgo)) as AccessToken;
+  return (await verify(accessToken, env.JWT_SECRET, JWT_ALGO)) as AccessToken;
 };
 
 const generateTokens = async (user: AuthUser) => {
   const payload: AccessToken = {
     user,
-    exp: tokenExpiry(15, 'minutes'),
+    exp: tokenExpiry(...ACCESS_TOKEN_DURATION_PARAMS),
     jti: randomUUIDv7(),
   };
 
-  const accessToken = await sign(payload, env.JWT_SECRET, jwtAlgo);
+  const accessToken = await sign(payload, env.JWT_SECRET, JWT_ALGO);
   const refreshToken = randomBytes(32).toString('hex');
 
   return { accessToken, refreshToken };
@@ -46,19 +61,13 @@ const setCookies = (
 ) => {
   const { accessToken, refreshToken } = tokens;
 
-  setCookie(c, ACCESS_TOKEN, accessToken, {
-    ...cookieOptions,
-    maxAge: durationSeconds(15, 'minutes'),
-  });
-  setCookie(c, REFRESH_TOKEN, refreshToken, {
-    ...cookieOptions,
-    maxAge: durationSeconds(1, 'days'),
-  });
+  setCookie(c, ACCESS_TOKEN, accessToken, accessTokenCookieOptions());
+  setCookie(c, REFRESH_TOKEN, refreshToken, refreshTokenCookieOptions());
 };
 
 const deleteCookies = (c: Context) => {
-  deleteCookie(c, ACCESS_TOKEN);
-  deleteCookie(c, REFRESH_TOKEN);
+  deleteCookie(c, ACCESS_TOKEN, accessTokenCookieOptions());
+  deleteCookie(c, REFRESH_TOKEN, refreshTokenCookieOptions());
 };
 
 const loginUser = async (c: Context, user: AuthUser) => {

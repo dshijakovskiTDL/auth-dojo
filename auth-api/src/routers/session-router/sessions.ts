@@ -1,12 +1,18 @@
 import { Context } from 'hono';
 import { randomBytes } from 'node:crypto';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
+import { CookieOptions } from 'hono/utils/cookie';
 
 import { durationSeconds } from '../shared/utils';
 import { sessionStore } from './store';
 import { AuthUser, cookieOptions } from '../shared';
 
 const SESSION_COOKIE = 'auth-dojo-session-id';
+
+const sessionCookieOptions = (): CookieOptions => ({
+  ...cookieOptions,
+  maxAge: durationSeconds(1, 'days'),
+});
 
 const generateSessionId = () => {
   return randomBytes(32).toString('hex');
@@ -17,14 +23,11 @@ const getSessionCookie = (c: Context) => {
 };
 
 const setSessionCookie = (c: Context, sessionId: string) => {
-  setCookie(c, SESSION_COOKIE, sessionId, {
-    ...cookieOptions,
-    maxAge: durationSeconds(1, 'days'),
-  });
+  setCookie(c, SESSION_COOKIE, sessionId, sessionCookieOptions());
 };
 
 const deleteSessionCookie = (c: Context) => {
-  deleteCookie(c, SESSION_COOKIE);
+  deleteCookie(c, SESSION_COOKIE, sessionCookieOptions());
 };
 
 const loginUser = async (c: Context, user: AuthUser) => {
