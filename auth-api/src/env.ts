@@ -6,7 +6,7 @@ const EnvSchema = v.object({
   JWT_SECRET: v.string(),
 
   REDIS_URL: v.string(),
-  REDIS_PASSWORD: v.string(),
+  REDIS_PASSWORD: v.optional(v.string()),
 
   GOOGLE_CLIENT_ID: v.string(),
   GOOGLE_CLIENT_SECRET: v.string(),
