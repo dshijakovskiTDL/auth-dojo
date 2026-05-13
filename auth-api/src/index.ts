@@ -17,6 +17,10 @@ const app = new Hono();
 
 app.use(cors({ origin: [env.FRONTEND_URL], credentials: true }));
 
+app.get('/', (c) => {
+  return c.json({ message: 'Hello from the Auth Dojo API!' });
+});
+
 app.post(
   '/signup',
   middleware.validateRegisterAuthMode,
@@ -67,4 +71,7 @@ if (env.BUN_ENV === 'development') {
   console.info(showRoutes(app, { verbose: true }));
 }
 
-export default app;
+export default {
+  port: env.PORT,
+  fetch: app.fetch,
+};

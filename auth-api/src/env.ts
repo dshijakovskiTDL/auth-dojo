@@ -1,6 +1,7 @@
 import * as v from 'valibot';
 
 const EnvSchema = v.object({
+  PORT: v.fallback(v.number(), 3000),
   BUN_ENV: v.fallback(v.picklist(['development', 'production']), 'development'),
 
   FRONTEND_URL: v.fallback(v.string(), 'http://localhost:5173'),
