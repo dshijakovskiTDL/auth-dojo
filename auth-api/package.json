@@ -2,7 +2,7 @@
   "name": "auth-api",
   "scripts": {
     "dev": "bun run --hot --loader .html:text src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target=bun",
+    "build": "bun build src/index.ts --outdir dist --target=bun --loader .html:text",
     "start": "bun run dist/index.js",
     "format": "prettier --write .",
     "type-check": "bunx tsc --noEmit",
