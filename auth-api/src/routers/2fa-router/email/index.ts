@@ -1,28 +1,23 @@
 import { resend } from '../../../email';
 import { AuthUser } from '../../shared';
 
-const templateCache = new Map<string, string>();
+import twoFactorCodeTemplate from './2fa-code.html';
 
 const FROM_EMAIL = 'Auth Dojo <auth-dojo@feitcode.dev>';
 
-const loadTemplate = async (name: string, replacements: Record<string, string>) => {
-  if (!templateCache.has(name)) {
-    templateCache.set(name, await Bun.file(`${import.meta.dir}/${name}.html`).text());
-  }
-
-  let html = templateCache.get(name)!;
-
+const populateTemplate = (template: string, replacements: Record<string, string>) => {
   for (const [key, value] of Object.entries(replacements)) {
-    html = html.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    template = template.replace(new RegExp(`{{${key}}}`, 'g'), value);
   }
 
-  return html;
+  return template;
 };
 
 const sendCodeVerification = async (code: string, user: AuthUser) => {
   const formattedCode = code.replace(/(\d{3})(\d{3})/, '$1 $2'); // 123456 -> 123 456
 
-  const html = await loadTemplate('2fa-code', {
+  // @ts-expect-error - HTMLBundle is not comparable to string
+  const html = populateTemplate(twoFactorCodeTemplate as string, {
     name: user.firstName,
     code: formattedCode,
   });
