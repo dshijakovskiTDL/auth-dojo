@@ -1,6 +1,8 @@
 import * as v from 'valibot';
 
 const EnvSchema = v.object({
+  BUN_ENV: v.fallback(v.picklist(['development', 'production']), 'development'),
+
   FRONTEND_URL: v.fallback(v.string(), 'http://localhost:5173'),
   API_URL: v.fallback(v.string(), 'http://localhost:3000'),
   JWT_SECRET: v.string(),

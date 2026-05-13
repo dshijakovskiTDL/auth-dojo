@@ -63,6 +63,8 @@ app.get('/health', async (c) => {
   }
 });
 
-console.info(showRoutes(app, { verbose: true }));
+if (env.BUN_ENV === 'development') {
+  console.info(showRoutes(app, { verbose: true }));
+}
 
 export default app;
