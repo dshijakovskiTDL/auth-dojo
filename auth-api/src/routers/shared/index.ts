@@ -2,7 +2,7 @@ import { CookieOptions } from 'hono/utils/cookie';
 
 export const cookieOptions: CookieOptions = {
   httpOnly: true,
-  sameSite: 'strict',
+  sameSite: 'none',
   secure: true,
   path: '/',
 };
