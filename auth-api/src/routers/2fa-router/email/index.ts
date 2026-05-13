@@ -2,7 +2,6 @@ import { resend } from '../../../email';
 import { AuthUser } from '../../shared';
 
 import twoFactorCodeTemplate from './2fa-code.html';
-console.log(twoFactorCodeTemplate);
 
 const FROM_EMAIL = 'Auth Dojo <auth-dojo@feitcode.dev>';
 
