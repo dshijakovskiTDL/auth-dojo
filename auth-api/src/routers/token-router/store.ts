@@ -5,8 +5,8 @@ import { AuthUser } from '../shared';
 
 export type AccessToken = { user: AuthUser; exp: number; jti: string };
 
-const STORE_PREFIX: RedisKeyPrefix = 'token:';
-const BLACKLIST_PREFIX: RedisKeyPrefix = `${STORE_PREFIX}blacklist:`;
+const STORE_PREFIX: RedisKeyPrefix = 'tokens:refresh:';
+const BLACKLIST_PREFIX: RedisKeyPrefix = 'tokens:blacklist:';
 
 const tokenKey = (token: string) => {
   const hashedToken = hashValue(token);

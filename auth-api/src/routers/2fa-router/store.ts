@@ -2,8 +2,8 @@ import { database } from '../shared/db';
 import { redis, RedisKeyPrefix } from '../shared/redis';
 import { durationSeconds, hashValue } from '../shared/utils';
 
-const STORE_PREFIX: RedisKeyPrefix = '2fa:session:';
-const PRE_AUTH_PREFIX: RedisKeyPrefix = '2fa:pre_auth:';
+const STORE_PREFIX: RedisKeyPrefix = 'sessions:2fa:';
+const PRE_AUTH_PREFIX: RedisKeyPrefix = 'sessions:2fa:pre_auth:';
 
 const sessionKey = (sessionId: string) => {
   const hashedSessionId = hashValue(sessionId);
